@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Huggly.CLI": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

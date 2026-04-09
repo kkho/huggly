@@ -1,0 +1,28 @@
+# Ignore Git history (saves massive space in the image)
+.git
+.gitignore
+
+# Ignore IDE settings
+.vs
+.vscode
+.history
+
+# Ignore local build artifacts (VERY IMPORTANT)
+# You want the Dockerfile to build these fresh inside the container
+[Bb]in/
+[Oo]bj/
+node_modules/
+dist/
+out/
+build/
+
+# Ignore local environment secrets
+.env
+.env.*
+*.pfx
+*.pem
+
+# Ignore Docker's own compose files if they aren't needed in the image
+docker-compose.yml
+docker-compose.override.yml
+Dockerfile

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Huggly.CLI/Huggly.CLI.csproj" />
+  <Project Path="src/Huggly.Core/Huggly.Core.csproj" Id="41a1e99a-5fa8-4441-90a7-05c1d222de66" />
+</Solution>

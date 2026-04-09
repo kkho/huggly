@@ -1,0 +1,98 @@
+# ==========================================================
+# 1. Visual Studio (Full IDE)
+# ==========================================================
+.vs/
+[Bb]in/
+[Oo]bj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.opendb
+*.db
+*.suo
+*.ide/
+*.ncb
+*.userprefs
+*.v12.suo
+*.v11.suo
+
+# ==========================================================
+# 2. VS Code (Collaborative Settings)
+# ==========================================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+# Local history plugin for VS Code
+.history/
+
+# ==========================================================
+# 3. Environment & Secrets (CRITICAL)
+# ==========================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.pfx
+*.cert
+
+# ==========================================================
+# 4. Standardized Build & Package Managers
+# ==========================================================
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# C++ / CMake
+CMakeSettings.json
+CMakeUserPresets.json
+out/
+build/
+
+# ==========================================================
+# 5. OS Generated Files
+# ==========================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================================
+# 6. Docker & Container Infrastructure
+# ==========================================================
+# Ignore local Docker logs and process IDs
+.docker/
+docker-compose.override.yml* # Local overrides (keep the base .yml, ignore locals)
+*.log
+*.pid
+
+# Ignore data persisted in local volumes (if you map them to your project root)
+/data/
+/db-data/
+/pg-data/
+/mysql-data/
+/redis-data/
+
+# Docker build context artifacts
+.dockerignore                 # DO NOT ignore this (keep it tracked!)
+Dockerfile* # DO NOT ignore this (keep it tracked!)
+
+# Specific to Docker Desktop / WSL2 integration
+.docker-desktop/
