@@ -1,0 +1,20 @@
+# Templates/Files/System/main.tf.scriban
+
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = "{{ subscription_id }}"
+}
+
+resource "azurerm_resource_group" "{{ system_name | string.downcase }}" {
+  name     = "rg-{{ system_name | string.downcase }}-{{ environment }}"
+  location = "{{ location }}"
+}

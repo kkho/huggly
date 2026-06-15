@@ -1,0 +1,21 @@
+kind: AppService
+system: Conferenti
+name: conferenti-app
+servicePlan: conferenti-plan
+httpsOnly: true
+siteConfig:
+  alwaysOn: true
+  http2Enabled: true
+  minimumTlsVersion: "1.2"
+  ftpsState: Disabled
+  healthCheckPath: /health
+  applicationStack:
+    dotnetVersion: "10"
+appSettings:
+  ASPNETCORE_ENVIRONMENT: Production
+landing-zone:
+  dev:
+    appSettings:
+      ASPNETCORE_ENVIRONMENT: Development
+  test: {}
+  prod: {}

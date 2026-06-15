@@ -1,0 +1,10 @@
+kind: AksCluster
+name: huggly-cluster
+location: norwayeast
+kubernetes-version: "1.30"
+node-count: 3
+node-vm-size: Standard_DS2_v2
+landing-zone:
+  dev: {}
+  test: {}
+  prod: {}

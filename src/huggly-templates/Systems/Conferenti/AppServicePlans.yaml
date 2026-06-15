@@ -1,0 +1,11 @@
+kind: AppServicePlan
+system: Conferenti
+name: conferenti-plan
+sku: B1
+osType: Linux
+workerCount: 1
+zoneBalancing: false
+landing-zone:
+  dev: {}
+  test: {}
+  prod: {}

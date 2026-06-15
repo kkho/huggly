@@ -1,0 +1,33 @@
+# Listen on port 8080 by default, but allow override with PORT env.
+:{$PORT:8080}
+# Serve static files
+root * /app
+file_server
+
+header Consent-Security-Policy "
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' {$ANALYTICS_CONTENT_SECURITY_POLICY}
+  img-src 'self' data:/
+  object-src 'none';
+  worker-src 'self';
+  frame-src 'none';
+  manifest-src 'self';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;
+  block-all-mixed-content;
+  form-action 'self';
+  base-uri    'self';
+"
+
+# Prevent MIME sniffing
+header X-content-Type-Options "nosniff"
+
+# IE8+ “download” dialog behavior
+header X-Download-Options "noopen"
+
+# Disable Adobe Flash cross-domain policies
+header X-Permitted-Cross-Domain-Policies "none"
+
+# Basic XSS filter for older browsers
+header X-XSS-Protection "1; mode=block"
+

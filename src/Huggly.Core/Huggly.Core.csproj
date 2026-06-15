@@ -6,11 +6,23 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+
   <ItemGroup>
-    <Folder Include="Entities\Azure\" />
-    <Folder Include="Entities\Huggly\" />
+    <EmbeddedResource Include="Templates\Files\**\*.scriban" />
+    <EmbeddedResource Include="Templates\Modules\**\*.tf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Scriban" Version="7.2.4" />
+    <PackageReference Include="YamlDotNet" Version="18.0.0" />
+    <PackageReference Include="YamlDotNet.System.Text.Json" Version="1.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Entities\DevOps\" />
-    <Folder Include="Entities\Templates\Files\Azure\Compute\" />
+    <Folder Include="Entities\Templates\Files\Applications\" />
+    <Folder Include="Entities\Templates\Files\Contexts\" />
+    <Folder Include="Entities\Templates\Files\Scripts\" />
   </ItemGroup>
 
 </Project>

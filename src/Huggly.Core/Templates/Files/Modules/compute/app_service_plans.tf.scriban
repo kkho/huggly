@@ -1,0 +1,15 @@
+# Modules/compute/service_plan.tf.scriban
+
+{{- for plan in app_service_plans  }}
+resource "azurerm_service_plan" "{{ plan.name | string.downcase }}" {
+  name                      = "{{ plan.name }}-{{ environment }}"
+  resource_group_name       = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                  = "{{ location }}"
+  os_type                   = "{{ plan.os_type }}"
+  sku_name                  = "{{ plan.sku }}"
+{{ if plan.worker_count }}
+  worker_count              = "{{ plan.worker_count }}"
+{{ end }}
+}
+
+{{ end }}

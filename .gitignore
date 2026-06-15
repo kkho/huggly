@@ -1,3 +1,6 @@
+
+generated/
+
 # ==========================================================
 # 1. Visual Studio (Full IDE)
 # ==========================================================
@@ -28,6 +31,10 @@
 *.code-workspace
 # Local history plugin for VS Code
 .history/
+.idea/
+*.swp
+*.swo
+*~
 
 # ==========================================================
 # 3. Environment & Secrets (CRITICAL)
@@ -41,27 +48,22 @@
 *.key
 *.pfx
 *.cert
+.vercel
 
 # ==========================================================
 # 4. Standardized Build & Package Managers
 # ==========================================================
 # Node.js
 node_modules/
+/.pnp
+.pnp.js
 npm-debug.log*
+yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.venv/
-
-# C++ / CMake
-CMakeSettings.json
-CMakeUserPresets.json
-out/
-build/
+*.tsbuildinfo
+next-env.d.ts
 
 # ==========================================================
 # 5. OS Generated Files
@@ -73,6 +75,7 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
+.pem
 
 # ==========================================================
 # 6. Docker & Container Infrastructure
@@ -96,3 +99,10 @@ Dockerfile* # DO NOT ignore this (keep it tracked!)
 
 # Specific to Docker Desktop / WSL2 integration
 .docker-desktop/
+
+/coverage
+
+/build
+/dist
+/.next/
+/out/

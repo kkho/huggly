@@ -1,0 +1,75 @@
+# infrastructure/aks-cluster.tf
+
+resource "azurerm_kubernetes_cluster" "aks" {
+  name                           = "{{ Resources.ClusterName }}"
+  location                       = "{{ Resources.Location }}"
+  resource_group_name            = "{{ Resources.ResourceGroupName }}"
+  dns_prefix                     =  "aks"
+  kubernetes_version             =  "{{ Resources.KubernetesVersion }}"
+  node_resource_group            =  "{{ Resources.NodeResourceGroupName }}-worker"
+
+  sku_tier                       =  "{{ Features.SkuTier }}"
+  automatic_upgrade_channel      =  "{{ Features.AutomaticUpgradeChannel }}"
+
+  workload_identity_enabled      =  "{{ Features.WorkloadIdentityEnabled }}"
+  oidc_issuer_enabled            =  "{{ Features.OidcIssuerEnabled }}"
+  azure_policy_enabled           =  "{{ Features.AzurePolicyEnabled }}"
+  image_cleaner_interval_hours   =  "{{ Features.ImageCleanerIntervalHours }}"
+
+  default_node_pool {
+    name            = "nodepool2"
+    node_count      = "{{ Resources.NodeCount }}"
+    vm_size         = "{{ Resources.VmSize }}"
+    zones           = "[{{ for zone in SystemNodePool.Zones }}{{ zone }}{{ if !for.last }}, {{ end }}{{ end }}]"
+    os_disk_type    = "{{ Resources.OsDiskType }}"
+    vnet_subnet_id  = azurerm_subnet.aks_subnet.id
+  }
+
+  network_profile {
+    network_plugin    = "azure"
+    load_balancer_sku = "standard"
+    network_policy    = "azure"
+    dns_service_ip     = "{{ Resources.DnsServiceIp }}"
+    service_cidr       = "{{ Resources.ServiceCidr }}"
+  }
+
+  azure_active_directory_role_based_access_control {
+    tenant_id              = "{{ TenantId }}"
+    admin_group_object_ids = ["{{ AdminGroupObjectId }}"]
+    azure_rbac_enabled     = false
+  }
+}
+
+{{ if UserNodePool }}
+resource "azurerm_kubernetes_cluster_node_pool" "user" {
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+  name                  = "user"
+  vm_size               = "{{ UserNodePool.VmSize }}"
+  zones                = "[{{ for zone in UserNodePool.Zones }}{{ zone }}{{ if !for.last }}, {{ end }}{{ end }}]"
+}
+{{ end }}
+
+resource "azurerm_kubernetes_cluster_node_pool" "prometheus" {
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+  name                  = "highiops"
+  vm_size               = "{{ PrometheusNodePool.VmSize }}"
+
+  auto_scaling_enabled  = true
+  min_count             = "{{ PrometheusNodePool.MinCount }}"
+  max_count             = "{{ PrometheusNodePool.MaxCount }}"
+
+  node_labels = {
+    {{ for label in PrometheusNodePool.NodeLabels }}
+    {{ label.Key }} = "{{ label.Value }}"
+    {{ if !for.last }}, {{ end }}
+    {{ end }}
+  }
+
+  node_taints = [
+    {{ for taint in PrometheusNodePool.NodeTaints }}
+    "{{ taint.Key }}={{ taint.Value }}:{{ taint.Effect }}"
+    {{ if !for.last }}, {{ end }}
+    {{ end }}
+  ]
+}
+

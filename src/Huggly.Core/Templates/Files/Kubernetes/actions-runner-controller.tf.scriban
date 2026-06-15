@@ -1,0 +1,33 @@
+locals {
+  actions_runner_controller_enabled = {{ Environment == "sandbox" }} || {{ Environment == "prod" }} ? true : false
+}
+
+module "rg-arc" {
+  source = "./modules/resourcegroup"
+
+  version = "~> 0.1.1"
+  count   = local.actions_runner_controller_enabled ? 1 : 0
+
+  system_name = "arc"
+  environment = {{ Environment }}
+  location    = local.location
+}
+
+resource "azurerm_kubernetes_cluster" "action-runner-controller" {
+  count = local.actions_runner_controller_enabled ? 1 : 0
+
+  name                = "arccluster{{ Environment }}"
+  dns_prefix          = "arccluster{{ Environment }}"
+  location            = local.location
+  resource_group_name = module.rg-arc[0].azurerm_resource_group.name
+  node_resource_group = "${module.rg-arc[0].azurerm_resource_group.name}-worker"
+
+  role_based_access_control_enabled = true
+  workload_identity_enabled         = true
+  oidc_issuer_enabled               = true
+}
+
+default_node_pool {
+  name                        = "system"
+  node_ 
+}

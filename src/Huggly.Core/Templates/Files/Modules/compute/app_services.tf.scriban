@@ -1,0 +1,55 @@
+# Modules/compute/app_service.tf.scriban
+
+{{- for app in app_services }}
+resource "azurerm_linux_web_app" "{{ app.name | string.downcase }}" {
+  name                = "{{ app.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  service_plan_id     = azurerm_service_plan.{{ app.service_plan | string.downcase }}.id
+  https_only          = {{ app.https_only | string.downcase }}
+
+  site_config {
+    always_on             = {{ app.site_config.always_on | string.downcase }}
+    http2_enabled         = {{ app.site_config.http2_enabled | string.downcase }}
+    minimum_tls_version   = "{{ app.site_config.minimum_tls_version }}"
+    ftps_state            = "{{ app.site_config.ftps_state }}"
+    {{- if app.site_config.health_check_path }}
+    health_check_path     = "{{ app.site_config.health_check_path }}"
+    {{- end }}
+
+    {{- if app.site_config.application_stack }}
+    application_stack {
+      {{- if app.site_config.application_stack.dotnet_version }}
+      dotnet_version = "{{ app.site_config.application_stack.dotnet_version }}"
+      {{- end }}
+      {{- if app.site_config.application_stack.node_version }}
+      node_version = "{{ app.site_config.application_stack.node_version }}"
+      {{- end }}
+      {{- if app.site_config.application_stack.python_version }}
+      python_version = "{{ app.site_config.application_stack.python_version }}"
+      {{- end }}
+      {{- if app.site_config.application_stack.java_version }}
+      java_version = "{{ app.site_config.application_stack.java_version }}"
+      {{- end }}
+    }
+    {{- end }}
+  }
+
+  {{- if app.app_settings }}
+  app_settings = {
+    {{- for setting in app.app_settings }}
+    "{{ setting.key }}" = "{{ setting.value }}"
+    {{- end }}
+  }
+  {{- end }}
+
+  {{- if app.identity }}
+  identity {
+    type = "{{ app.identity.type }}"
+    {{- if app.identity.identity_ids }}
+    identity_ids = {{ app.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

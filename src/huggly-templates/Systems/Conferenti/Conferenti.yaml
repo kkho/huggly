@@ -1,0 +1,9 @@
+kind: System
+name: Conferenti
+data:
+  location: norwayeast
+  subscription_id: 00000000-0000-0000-0000-000000000000
+landing-zone:
+  dev: {}
+  test: {}
+  prod: {}
