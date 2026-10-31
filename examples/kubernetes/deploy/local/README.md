@@ -75,9 +75,30 @@ kubectl -n argocd get application hello
 kubectl -n hello get pods
 ```
 
-The application should show `Synced` and `Healthy`, and two `hello-...` pods should be `Running`. This can take up to a minute while nginx is pulled.
+The application should show `Synced` and `Healthy`, and two `hello-app-...` pods should be `Running`. This can take up to a minute while nginx is pulled.
 
-In the Argo CD UI, the **hello** tile shows the resource tree: Namespace → Deployment → ReplicaSet → Pods. To open the UI, run this in a second cmd window, then browse to http://localhost:8081 and sign in as `admin`:
+The Argo CD application is called `hello`. The Deployment and Service it creates are called `hello-app`, so the commands below use both names.
+
+### Open the app in your browser
+
+Pods inside kind can't be reached from your PC directly, so forward a local port to the Service. Run this in a second cmd window and keep it open:
+
+```bat
+kubectl -n hello port-forward svc/hello-app 8082:80
+```
+
+Browse to http://localhost:8082. You should see **Welcome to nginx!** Press **Ctrl+C** to stop forwarding.
+
+The Service spreads requests across both pods. To test one specific pod instead:
+
+```bat
+kubectl -n hello get pods
+kubectl -n hello port-forward pod/<pod-name> 8083:80
+```
+
+### See it in Argo CD
+
+Run this in another cmd window, then browse to http://localhost:8081 and sign in as `admin`:
 
 ```bat
 kubectl -n argocd port-forward svc/argocd-server 8081:80
@@ -85,11 +106,21 @@ kubectl -n argocd port-forward svc/argocd-server 8081:80
 
 Get the password from the `local-k8s` folder with `terraform output -raw argocd_admin_password`.
 
-To see the nginx welcome page, run this in another cmd window, then browse to http://localhost:8082:
+Click the **hello** tile to see the resource tree:
+
+```
+hello (app) → Namespace hello
+            → Service hello-app
+            → Deployment hello-app → ReplicaSet → Pod, Pod
+```
+
+Click a pod to see its events and live manifest. Its **Logs** tab shows the nginx access log: refresh http://localhost:8082 and watch the requests come in. From the command line:
 
 ```bat
-kubectl -n hello port-forward svc/hello 8082:80
+kubectl -n hello logs -l app=hello-app -f --prefix
 ```
+
+Each new cmd window needs `KUBECONFIG` set before `kubectl` can connect. See [Before you start](#before-you-start).
 
 ## 4. Try the GitOps loop
 
@@ -102,11 +133,20 @@ kubectl -n hello get pods
 **Watch Argo CD undo a manual change.** Scale the deployment by hand:
 
 ```bat
-kubectl -n hello scale deployment hello --replicas=1
+kubectl -n hello scale deployment hello-app --replicas=1
+kubectl -n hello get pods -w
+```
+
+Within a few seconds Argo CD scales it back to the number in Git. This is `selfHeal: true` in `argocd/hello-app.yaml`. Press **Ctrl+C** to stop watching.
+
+**Watch a pod get replaced.** Delete one of the pods:
+
+```bat
+kubectl -n hello delete pod <pod-name>
 kubectl -n hello get pods
 ```
 
-Within a few seconds Argo CD scales it back to the number in Git. This is `selfHeal: true` in `argocd/hello-app.yaml`.
+A new pod appears straight away. The Deployment does this, not Argo CD, and it's why you define pods through a Deployment instead of creating bare `Pod` objects.
 
 **Roll back.** Undo your last commit and push:
 
