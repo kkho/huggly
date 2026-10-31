@@ -1,0 +1,20 @@
+# Modules/networking/private_dns_zones.tf.scriban
+
+{{- for zone in private_dns_zones }}
+resource "azurerm_private_dns_zone" "{{ zone.name | string.downcase | string.replace "." "_" }}" {
+  name                = "{{ zone.name }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+}
+
+{{- if zone.virtual_network_links }}
+{{- for link in zone.virtual_network_links }}
+resource "azurerm_private_dns_zone_virtual_network_link" "{{ zone.name | string.downcase | string.replace "." "_" }}_{{ link.name | string.downcase }}" {
+  name                  = "{{ link.name }}"
+  resource_group_name   = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  private_dns_zone_name = azurerm_private_dns_zone.{{ zone.name | string.downcase | string.replace "." "_" }}.name
+  virtual_network_id    = "{{ link.virtual_network_id }}"
+  registration_enabled  = {{ link.registration_enabled | string.downcase }}
+}
+{{- end }}
+{{- end }}
+{{ end }}

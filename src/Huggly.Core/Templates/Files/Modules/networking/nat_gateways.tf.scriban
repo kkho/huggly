@@ -1,0 +1,21 @@
+# Modules/networking/nat_gateways.tf.scriban
+
+{{- for nat in nat_gateways }}
+resource "azurerm_nat_gateway" "{{ nat.name | string.downcase }}" {
+  name                    = "{{ nat.name }}-{{ environment }}"
+  resource_group_name     = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                = "{{ location }}"
+  sku_name                = "{{ nat.sku_name }}"
+  idle_timeout_in_minutes = {{ nat.idle_timeout_in_minutes }}
+  {{- if nat.zones }}
+  zones                   = {{ nat.zones | array.join ", " | string.prepend "[" | string.append "]" }}
+  {{- end }}
+}
+
+{{- if nat.public_ip }}
+resource "azurerm_nat_gateway_public_ip_association" "{{ nat.name | string.downcase }}_pip" {
+  nat_gateway_id       = azurerm_nat_gateway.{{ nat.name | string.downcase }}.id
+  public_ip_address_id = azurerm_public_ip.{{ nat.public_ip | string.downcase }}.id
+}
+{{- end }}
+{{ end }}

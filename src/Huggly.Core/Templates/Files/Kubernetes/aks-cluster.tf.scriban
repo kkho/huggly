@@ -4,7 +4,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   name                           = "{{ Resources.ClusterName }}"
   location                       = "{{ Resources.Location }}"
   resource_group_name            = "{{ Resources.ResourceGroupName }}"
-  dns_prefix                     =  "aks"
+  dns_prefix                     = "{{ Resources.DnsPrefix }}"
   kubernetes_version             =  "{{ Resources.KubernetesVersion }}"
   node_resource_group            =  "{{ Resources.NodeResourceGroupName }}-worker"
 

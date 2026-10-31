@@ -1,0 +1,19 @@
+# Modules/integration/event_grid_topics.tf.scriban
+
+{{- for topic in event_grid_topics }}
+resource "azurerm_eventgrid_topic" "{{ topic.name | string.downcase }}" {
+  name                = "{{ topic.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  input_schema        = "{{ topic.input_schema }}"
+
+  {{- if topic.identity }}
+  identity {
+    type = "{{ topic.identity.type }}"
+    {{- if topic.identity.identity_ids }}
+    identity_ids = {{ topic.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

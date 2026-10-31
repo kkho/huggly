@@ -1,0 +1,15 @@
+# Modules/containers/container_app_environments.tf.scriban
+
+{{- for env in container_app_environments }}
+resource "azurerm_container_app_environment" "{{ env.name | string.downcase }}" {
+  name                       = "{{ env.name }}-{{ environment }}"
+  resource_group_name        = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                   = "{{ location }}"
+  {{- if env.log_analytics_workspace }}
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.{{ env.log_analytics_workspace | string.downcase }}.id
+  {{- end }}
+  {{- if env.infrastructure_subnet_id }}
+  infrastructure_subnet_id   = "{{ env.infrastructure_subnet_id }}"
+  {{- end }}
+}
+{{ end }}

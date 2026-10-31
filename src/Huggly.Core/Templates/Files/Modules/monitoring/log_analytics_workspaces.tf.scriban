@@ -1,0 +1,14 @@
+# Modules/monitoring/log_analytics_workspaces.tf.scriban
+
+{{- for workspace in log_analytics_workspaces }}
+resource "azurerm_log_analytics_workspace" "{{ workspace.name | string.downcase }}" {
+  name                = "{{ workspace.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  sku                 = "{{ workspace.sku }}"
+  retention_in_days   = {{ workspace.retention_in_days }}
+  {{- if workspace.daily_quota_gb }}
+  daily_quota_gb      = {{ workspace.daily_quota_gb }}
+  {{- end }}
+}
+{{ end }}

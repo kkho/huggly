@@ -1,0 +1,21 @@
+# Modules/networking/virtual_network_gateways.tf.scriban
+
+{{- for gw in virtual_network_gateways }}
+resource "azurerm_virtual_network_gateway" "{{ gw.name | string.downcase }}" {
+  name                = "{{ gw.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  type                = "{{ gw.type }}"
+  vpn_type            = "{{ gw.vpn_type }}"
+  sku                 = "{{ gw.sku }}"
+  active_active       = {{ gw.active_active | string.downcase }}
+  enable_bgp          = {{ gw.enable_bgp | string.downcase }}
+
+  ip_configuration {
+    name                          = "{{ gw.name | string.downcase }}-ipconfig"
+    public_ip_address_id          = azurerm_public_ip.{{ gw.public_ip | string.downcase }}.id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = "{{ gw.subnet_id }}"
+  }
+}
+{{ end }}

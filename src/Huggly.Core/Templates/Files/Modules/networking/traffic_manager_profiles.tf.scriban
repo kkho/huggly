@@ -1,0 +1,31 @@
+# Modules/networking/traffic_manager_profiles.tf.scriban
+
+{{- for tm in traffic_manager_profiles }}
+resource "azurerm_traffic_manager_profile" "{{ tm.name | string.downcase }}" {
+  name                   = "{{ tm.name }}-{{ environment }}"
+  resource_group_name    = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  traffic_routing_method = "{{ tm.traffic_routing_method }}"
+
+  dns_config {
+    relative_name = "{{ tm.dns_config.relative_name }}"
+    ttl           = {{ tm.dns_config.ttl }}
+  }
+
+  monitor_config {
+    protocol = "{{ tm.monitor_config.protocol }}"
+    port     = {{ tm.monitor_config.port }}
+    path     = "{{ tm.monitor_config.path }}"
+  }
+}
+
+{{- if tm.endpoints }}
+{{- for endpoint in tm.endpoints }}
+resource "azurerm_traffic_manager_azure_endpoint" "{{ tm.name | string.downcase }}_{{ endpoint.name | string.downcase }}" {
+  name               = "{{ endpoint.name }}"
+  profile_id         = azurerm_traffic_manager_profile.{{ tm.name | string.downcase }}.id
+  target_resource_id = "{{ endpoint.target_resource_id }}"
+  weight             = {{ endpoint.weight }}
+}
+{{- end }}
+{{- end }}
+{{ end }}

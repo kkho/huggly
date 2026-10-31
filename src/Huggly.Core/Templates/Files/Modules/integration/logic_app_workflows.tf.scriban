@@ -1,0 +1,18 @@
+# Modules/integration/logic_app_workflows.tf.scriban
+
+{{- for workflow in logic_app_workflows }}
+resource "azurerm_logic_app_workflow" "{{ workflow.name | string.downcase }}" {
+  name                = "{{ workflow.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+
+  {{- if workflow.identity }}
+  identity {
+    type = "{{ workflow.identity.type }}"
+    {{- if workflow.identity.identity_ids }}
+    identity_ids = {{ workflow.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

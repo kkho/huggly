@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # deleting the app also deletes its resources
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kkho/huggly
+    targetRevision: main
+    path: deploy/local/hello
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hello
+  syncPolicy:
+    automated:
+      prune: true # remove resources that you delete from git
+      selfHeal: true # undo manual changes made in the cluster

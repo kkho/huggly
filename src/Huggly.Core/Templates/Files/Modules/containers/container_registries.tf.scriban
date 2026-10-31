@@ -1,0 +1,30 @@
+# Modules/containers/container_registries.tf.scriban
+
+{{- for registry in container_registries }}
+resource "azurerm_container_registry" "{{ registry.name | string.downcase }}" {
+  name                          = "{{ registry.name }}{{ environment }}"
+  resource_group_name           = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                      = "{{ location }}"
+  sku                           = "{{ registry.sku }}"
+  admin_enabled                 = {{ registry.admin_enabled | string.downcase }}
+  public_network_access_enabled = {{ registry.public_network_access_enabled | string.downcase }}
+
+  {{- if registry.georeplications }}
+  {{- for replica in registry.georeplications }}
+  georeplications {
+    location                = "{{ replica.location }}"
+    zone_redundancy_enabled = {{ replica.zone_redundancy_enabled | string.downcase }}
+  }
+  {{- end }}
+  {{- end }}
+
+  {{- if registry.identity }}
+  identity {
+    type = "{{ registry.identity.type }}"
+    {{- if registry.identity.identity_ids }}
+    identity_ids = {{ registry.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

@@ -1,0 +1,23 @@
+# Modules/networking/network_security_groups.tf.scriban
+
+{{- for nsg in network_security_groups }}
+resource "azurerm_network_security_group" "{{ nsg.name | string.downcase }}" {
+  name                = "{{ nsg.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+
+  {{- for rule in nsg.security_rules }}
+  security_rule {
+    name                       = "{{ rule.name }}"
+    priority                   = {{ rule.priority }}
+    direction                  = "{{ rule.direction }}"
+    access                     = "{{ rule.access }}"
+    protocol                   = "{{ rule.protocol }}"
+    source_port_range          = "{{ rule.source_port_range }}"
+    destination_port_range     = "{{ rule.destination_port_range }}"
+    source_address_prefix      = "{{ rule.source_address_prefix }}"
+    destination_address_prefix = "{{ rule.destination_address_prefix }}"
+  }
+  {{- end }}
+}
+{{ end }}

@@ -1,0 +1,34 @@
+# Modules/messaging/service_bus_namespaces.tf.scriban
+
+{{- for ns in service_bus_namespaces }}
+resource "azurerm_servicebus_namespace" "{{ ns.name | string.downcase }}" {
+  name                = "{{ ns.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  sku                 = "{{ ns.sku }}"
+  {{- if ns.capacity }}
+  capacity            = {{ ns.capacity }}
+  {{- end }}
+}
+
+{{- if ns.queues }}
+{{- for queue in ns.queues }}
+resource "azurerm_servicebus_queue" "{{ ns.name | string.downcase }}_{{ queue.name | string.downcase }}" {
+  name                  = "{{ queue.name }}"
+  namespace_id          = azurerm_servicebus_namespace.{{ ns.name | string.downcase }}.id
+  max_delivery_count    = {{ queue.max_delivery_count }}
+  partitioning_enabled  = {{ queue.partitioning_enabled | string.downcase }}
+}
+{{- end }}
+{{- end }}
+
+{{- if ns.topics }}
+{{- for topic in ns.topics }}
+resource "azurerm_servicebus_topic" "{{ ns.name | string.downcase }}_{{ topic.name | string.downcase }}" {
+  name                 = "{{ topic.name }}"
+  namespace_id         = azurerm_servicebus_namespace.{{ ns.name | string.downcase }}.id
+  partitioning_enabled = {{ topic.partitioning_enabled | string.downcase }}
+}
+{{- end }}
+{{- end }}
+{{ end }}

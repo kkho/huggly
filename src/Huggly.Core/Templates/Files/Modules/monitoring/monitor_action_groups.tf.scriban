@@ -1,0 +1,23 @@
+# Modules/monitoring/monitor_action_groups.tf.scriban
+
+{{- for ag in monitor_action_groups }}
+resource "azurerm_monitor_action_group" "{{ ag.name | string.downcase }}" {
+  name                = "{{ ag.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  short_name          = "{{ ag.short_name }}"
+
+  {{- for receiver in ag.email_receivers }}
+  email_receiver {
+    name          = "{{ receiver.name }}"
+    email_address = "{{ receiver.email_address }}"
+  }
+  {{- end }}
+
+  {{- for receiver in ag.webhook_receivers }}
+  webhook_receiver {
+    name        = "{{ receiver.name }}"
+    service_uri = "{{ receiver.service_uri }}"
+  }
+  {{- end }}
+}
+{{ end }}

@@ -1,0 +1,22 @@
+# Modules/database/redis_caches.tf.scriban
+
+{{- for cache in redis_caches }}
+resource "azurerm_redis_cache" "{{ cache.name | string.downcase }}" {
+  name                = "{{ cache.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  capacity            = {{ cache.capacity }}
+  family              = "{{ cache.family }}"
+  sku_name            = "{{ cache.sku_name }}"
+  non_ssl_port_enabled = {{ cache.non_ssl_port_enabled | string.downcase }}
+  minimum_tls_version = "{{ cache.minimum_tls_version }}"
+
+  {{- if cache.redis_configuration }}
+  redis_configuration {
+    {{- if cache.redis_configuration.maxmemory_policy }}
+    maxmemory_policy = "{{ cache.redis_configuration.maxmemory_policy }}"
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

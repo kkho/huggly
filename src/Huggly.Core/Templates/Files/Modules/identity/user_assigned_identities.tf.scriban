@@ -1,0 +1,9 @@
+# Modules/identity/user_assigned_identities.tf.scriban
+
+{{- for identity in user_assigned_identities }}
+resource "azurerm_user_assigned_identity" "{{ identity.name | string.downcase }}" {
+  name                = "{{ identity.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+}
+{{ end }}

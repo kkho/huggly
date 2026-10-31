@@ -1,0 +1,23 @@
+# Modules/networking/network_interfaces.tf.scriban
+
+{{- for nic in network_interfaces }}
+resource "azurerm_network_interface" "{{ nic.name | string.downcase }}" {
+  name                = "{{ nic.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+
+  {{- for ipconfig in nic.ip_configurations }}
+  ip_configuration {
+    name                          = "{{ ipconfig.name }}"
+    subnet_id                     = "{{ ipconfig.subnet_id }}"
+    private_ip_address_allocation = "{{ ipconfig.private_ip_address_allocation }}"
+    {{- if ipconfig.private_ip_address }}
+    private_ip_address            = "{{ ipconfig.private_ip_address }}"
+    {{- end }}
+    {{- if ipconfig.public_ip }}
+    public_ip_address_id          = azurerm_public_ip.{{ ipconfig.public_ip | string.downcase }}.id
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

@@ -106,3 +106,10 @@ Dockerfile* # DO NOT ignore this (keep it tracked!)
 /dist
 /.next/
 /out/
+
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# kubeconfig with cluster-admin credentials, written by the kind provider
+huggly-local-config

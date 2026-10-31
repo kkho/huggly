@@ -1,0 +1,49 @@
+# Modules/compute/function_apps.tf.scriban
+
+{{- for fn in function_apps }}
+resource "azurerm_linux_function_app" "{{ fn.name | string.downcase }}" {
+  name                       = "{{ fn.name }}-{{ environment }}"
+  resource_group_name        = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                   = "{{ location }}"
+  service_plan_id            = azurerm_service_plan.{{ fn.service_plan | string.downcase }}.id
+  storage_account_name       = azurerm_storage_account.{{ fn.storage_account | string.downcase }}.name
+  storage_account_access_key = azurerm_storage_account.{{ fn.storage_account | string.downcase }}.primary_access_key
+  https_only                 = {{ fn.https_only | string.downcase }}
+
+  site_config {
+    always_on             = {{ fn.site_config.always_on | string.downcase }}
+    minimum_tls_version   = "{{ fn.site_config.minimum_tls_version }}"
+
+    {{- if fn.site_config.application_stack }}
+    application_stack {
+      {{- if fn.site_config.application_stack.dotnet_version }}
+      dotnet_version = "{{ fn.site_config.application_stack.dotnet_version }}"
+      {{- end }}
+      {{- if fn.site_config.application_stack.node_version }}
+      node_version = "{{ fn.site_config.application_stack.node_version }}"
+      {{- end }}
+      {{- if fn.site_config.application_stack.python_version }}
+      python_version = "{{ fn.site_config.application_stack.python_version }}"
+      {{- end }}
+    }
+    {{- end }}
+  }
+
+  {{- if fn.app_settings }}
+  app_settings = {
+    {{- for setting in fn.app_settings }}
+    "{{ setting.key }}" = "{{ setting.value }}"
+    {{- end }}
+  }
+  {{- end }}
+
+  {{- if fn.identity }}
+  identity {
+    type = "{{ fn.identity.type }}"
+    {{- if fn.identity.identity_ids }}
+    identity_ids = {{ fn.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

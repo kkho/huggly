@@ -1,0 +1,40 @@
+# Modules/compute/linux_virtual_machine_scale_sets.tf.scriban
+
+{{- for vmss in linux_virtual_machine_scale_sets }}
+resource "azurerm_linux_virtual_machine_scale_set" "{{ vmss.name | string.downcase }}" {
+  name                = "{{ vmss.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  sku                 = "{{ vmss.sku }}"
+  instances           = {{ vmss.instances }}
+  admin_username      = "{{ vmss.admin_username }}"
+
+  admin_ssh_key {
+    username   = "{{ vmss.admin_username }}"
+    public_key = "{{ vmss.ssh_public_key }}"
+  }
+
+  os_disk {
+    caching              = "{{ vmss.os_disk.caching }}"
+    storage_account_type = "{{ vmss.os_disk.storage_account_type }}"
+  }
+
+  source_image_reference {
+    publisher = "{{ vmss.source_image.publisher }}"
+    offer     = "{{ vmss.source_image.offer }}"
+    sku       = "{{ vmss.source_image.sku }}"
+    version   = "{{ vmss.source_image.version }}"
+  }
+
+  network_interface {
+    name    = "{{ vmss.name | string.downcase }}-nic"
+    primary = true
+
+    ip_configuration {
+      name      = "internal"
+      primary   = true
+      subnet_id = "{{ vmss.subnet_id }}"
+    }
+  }
+}
+{{ end }}

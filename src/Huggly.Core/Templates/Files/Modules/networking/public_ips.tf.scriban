@@ -1,0 +1,17 @@
+# Modules/networking/public_ips.tf.scriban
+
+{{- for ip in public_ips }}
+resource "azurerm_public_ip" "{{ ip.name | string.downcase }}" {
+  name                = "{{ ip.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  allocation_method   = "{{ ip.allocation_method }}"
+  sku                 = "{{ ip.sku }}"
+  {{- if ip.zones }}
+  zones               = {{ ip.zones | array.join ", " | string.prepend "[" | string.append "]" }}
+  {{- end }}
+  {{- if ip.domain_name_label }}
+  domain_name_label   = "{{ ip.domain_name_label }}"
+  {{- end }}
+}
+{{ end }}

@@ -1,0 +1,23 @@
+# Modules/ai/cognitive_accounts.tf.scriban
+
+{{- for account in cognitive_accounts }}
+resource "azurerm_cognitive_account" "{{ account.name | string.downcase }}" {
+  name                = "{{ account.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  kind                = "{{ account.kind }}"
+  sku_name            = "{{ account.sku_name }}"
+  {{- if account.custom_subdomain_name }}
+  custom_subdomain_name = "{{ account.custom_subdomain_name }}"
+  {{- end }}
+
+  {{- if account.identity }}
+  identity {
+    type = "{{ account.identity.type }}"
+    {{- if account.identity.identity_ids }}
+    identity_ids = {{ account.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

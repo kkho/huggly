@@ -1,0 +1,73 @@
+# Modules/networking/application_gateways.tf.scriban
+
+{{- for gw in application_gateways }}
+resource "azurerm_application_gateway" "{{ gw.name | string.downcase }}" {
+  name                = "{{ gw.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+
+  sku {
+    name     = "{{ gw.sku.name }}"
+    tier     = "{{ gw.sku.tier }}"
+    {{- if gw.sku.capacity }}
+    capacity = {{ gw.sku.capacity }}
+    {{- end }}
+  }
+
+  gateway_ip_configuration {
+    name      = "{{ gw.name | string.downcase }}-ip-config"
+    subnet_id = "{{ gw.subnet_id }}"
+  }
+
+  {{- for port in gw.frontend_ports }}
+  frontend_port {
+    name = "{{ port.name }}"
+    port = {{ port.port }}
+  }
+  {{- end }}
+
+  frontend_ip_configuration {
+    name                 = "{{ gw.name | string.downcase }}-feip"
+    public_ip_address_id = azurerm_public_ip.{{ gw.public_ip | string.downcase }}.id
+  }
+
+  {{- for pool in gw.backend_address_pools }}
+  backend_address_pool {
+    name = "{{ pool.name }}"
+    {{- if pool.fqdns }}
+    fqdns = {{ pool.fqdns | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+
+  {{- for setting in gw.backend_http_settings }}
+  backend_http_settings {
+    name                  = "{{ setting.name }}"
+    cookie_based_affinity = "{{ setting.cookie_based_affinity }}"
+    port                  = {{ setting.port }}
+    protocol              = "{{ setting.protocol }}"
+    request_timeout       = {{ setting.request_timeout }}
+  }
+  {{- end }}
+
+  {{- for listener in gw.http_listeners }}
+  http_listener {
+    name                           = "{{ listener.name }}"
+    frontend_ip_configuration_name = "{{ gw.name | string.downcase }}-feip"
+    frontend_port_name             = "{{ listener.frontend_port_name }}"
+    protocol                       = "{{ listener.protocol }}"
+  }
+  {{- end }}
+
+  {{- for rule in gw.request_routing_rules }}
+  request_routing_rule {
+    name                       = "{{ rule.name }}"
+    priority                   = {{ rule.priority }}
+    rule_type                  = "{{ rule.rule_type }}"
+    http_listener_name         = "{{ rule.http_listener_name }}"
+    backend_address_pool_name  = "{{ rule.backend_address_pool_name }}"
+    backend_http_settings_name = "{{ rule.backend_http_settings_name }}"
+  }
+  {{- end }}
+}
+{{ end }}

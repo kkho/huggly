@@ -1,0 +1,42 @@
+# Modules/containers/container_apps.tf.scriban
+
+{{- for app in container_apps }}
+resource "azurerm_container_app" "{{ app.name | string.downcase }}" {
+  name                         = "{{ app.name }}-{{ environment }}"
+  resource_group_name          = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  container_app_environment_id = azurerm_container_app_environment.{{ app.environment | string.downcase }}.id
+  revision_mode                = "{{ app.revision_mode }}"
+
+  template {
+    {{- for container in app.containers }}
+    container {
+      name   = "{{ container.name }}"
+      image  = "{{ container.image }}"
+      cpu    = {{ container.cpu }}
+      memory = "{{ container.memory }}"
+
+      {{- for env_var in container.env }}
+      env {
+        name  = "{{ env_var.name }}"
+        value = "{{ env_var.value }}"
+      }
+      {{- end }}
+    }
+    {{- end }}
+    min_replicas = {{ app.min_replicas }}
+    max_replicas = {{ app.max_replicas }}
+  }
+
+  {{- if app.ingress }}
+  ingress {
+    external_enabled = {{ app.ingress.external_enabled | string.downcase }}
+    target_port      = {{ app.ingress.target_port }}
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+  {{- end }}
+}
+{{ end }}

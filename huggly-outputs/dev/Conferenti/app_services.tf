@@ -3,7 +3,7 @@ resource "azurerm_linux_web_app" "conferenti-app" {
   name                = "conferenti-app-dev"
   resource_group_name = azurerm_resource_group.conferenti.name
   location            = "norwayeast"
-  service_plan_id     = azurerm_service_plan.my-plan.id
+  service_plan_id     = azurerm_service_plan.conferenti-plan.id
   https_only          = true
 
   site_config {

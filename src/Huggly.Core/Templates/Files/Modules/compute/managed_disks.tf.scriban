@@ -1,0 +1,15 @@
+# Modules/compute/managed_disks.tf.scriban
+
+{{- for disk in managed_disks }}
+resource "azurerm_managed_disk" "{{ disk.name | string.downcase }}" {
+  name                 = "{{ disk.name }}-{{ environment }}"
+  resource_group_name  = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location             = "{{ location }}"
+  storage_account_type = "{{ disk.storage_account_type }}"
+  create_option        = "{{ disk.create_option }}"
+  disk_size_gb         = {{ disk.disk_size_gb }}
+  {{- if disk.zone }}
+  zone                 = "{{ disk.zone }}"
+  {{- end }}
+}
+{{ end }}

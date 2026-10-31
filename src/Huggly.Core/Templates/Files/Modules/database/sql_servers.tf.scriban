@@ -1,0 +1,24 @@
+# Modules/database/sql_servers.tf.scriban
+
+{{- for server in sql_servers }}
+resource "azurerm_mssql_server" "{{ server.name | string.downcase }}" {
+  name                         = "{{ server.name }}-{{ environment }}"
+  resource_group_name          = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                     = "{{ location }}"
+  version                      = "{{ server.version }}"
+  administrator_login          = "{{ server.administrator_login }}"
+  administrator_login_password = var.{{ server.name | string.downcase }}_admin_password
+  minimum_tls_version          = "{{ server.minimum_tls_version }}"
+}
+
+{{- for db in server.databases }}
+resource "azurerm_mssql_database" "{{ server.name | string.downcase }}_{{ db.name | string.downcase }}" {
+  name           = "{{ db.name }}"
+  server_id      = azurerm_mssql_server.{{ server.name | string.downcase }}.id
+  sku_name       = "{{ db.sku_name }}"
+  max_size_gb    = {{ db.max_size_gb }}
+  zone_redundant = {{ db.zone_redundant | string.downcase }}
+  collation      = "{{ db.collation }}"
+}
+{{- end }}
+{{ end }}

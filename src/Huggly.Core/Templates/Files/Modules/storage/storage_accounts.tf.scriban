@@ -1,0 +1,38 @@
+# Modules/storage/storage_accounts.tf.scriban
+
+{{- for account in storage_accounts }}
+resource "azurerm_storage_account" "{{ account.name | string.downcase }}" {
+  name                          = "{{ account.name }}{{ environment }}"
+  resource_group_name           = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                      = "{{ location }}"
+  account_tier                  = "{{ account.account_tier }}"
+  account_replication_type      = "{{ account.account_replication_type }}"
+  account_kind                  = "{{ account.account_kind }}"
+  access_tier                   = "{{ account.access_tier }}"
+  https_traffic_only_enabled    = {{ account.https_traffic_only_enabled | string.downcase }}
+  min_tls_version               = "{{ account.min_tls_version }}"
+  public_network_access_enabled = {{ account.public_network_access_enabled | string.downcase }}
+
+  {{- if account.network_rules }}
+  network_rules {
+    default_action = "{{ account.network_rules.default_action }}"
+    {{- if account.network_rules.ip_rules }}
+    ip_rules       = {{ account.network_rules.ip_rules | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+    {{- if account.network_rules.subnet_ids }}
+    virtual_network_subnet_ids = {{ account.network_rules.subnet_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+
+{{- if account.containers }}
+{{- for container in account.containers }}
+resource "azurerm_storage_container" "{{ account.name | string.downcase }}_{{ container.name | string.downcase }}" {
+  name                  = "{{ container.name }}"
+  storage_account_id    = azurerm_storage_account.{{ account.name | string.downcase }}.id
+  container_access_type = "{{ container.access_type }}"
+}
+{{- end }}
+{{- end }}
+{{ end }}

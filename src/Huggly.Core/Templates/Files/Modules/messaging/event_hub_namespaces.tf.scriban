@@ -1,0 +1,26 @@
+# Modules/messaging/event_hub_namespaces.tf.scriban
+
+{{- for ns in event_hub_namespaces }}
+resource "azurerm_eventhub_namespace" "{{ ns.name | string.downcase }}" {
+  name                = "{{ ns.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  sku                 = "{{ ns.sku }}"
+  capacity            = {{ ns.capacity }}
+  {{- if ns.auto_inflate_enabled }}
+  auto_inflate_enabled     = true
+  maximum_throughput_units = {{ ns.maximum_throughput_units }}
+  {{- end }}
+}
+
+{{- if ns.event_hubs }}
+{{- for hub in ns.event_hubs }}
+resource "azurerm_eventhub" "{{ ns.name | string.downcase }}_{{ hub.name | string.downcase }}" {
+  name              = "{{ hub.name }}"
+  namespace_id      = azurerm_eventhub_namespace.{{ ns.name | string.downcase }}.id
+  partition_count   = {{ hub.partition_count }}
+  message_retention = {{ hub.message_retention }}
+}
+{{- end }}
+{{- end }}
+{{ end }}

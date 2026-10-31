@@ -1,0 +1,58 @@
+# Modules/security/key_vaults.tf.scriban
+
+data "azurerm_client_config" "current" {}
+
+{{- for vault in key_vaults }}
+resource "azurerm_key_vault" "{{ vault.name | string.downcase }}" {
+  name                            = "{{ vault.name }}-{{ environment }}"
+  resource_group_name             = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location                        = "{{ location }}"
+  tenant_id                       = data.azurerm_client_config.current.tenant_id
+  sku_name                        = "{{ vault.sku }}"
+  enabled_for_template_deployment = {{ vault.enabled_for_template_deployment | string.downcase }}
+  purge_protection_enabled        = {{ vault.purge_protection_enabled | string.downcase }}
+  soft_delete_retention_days      = {{ vault.soft_delete_retention_days }}
+
+  {{- if vault.network_acls }}
+  network_acls {
+    default_action = "{{ vault.network_acls.default_action }}"
+    bypass         = "{{ vault.network_acls.bypass }}"
+    {{- if vault.network_acls.ip_rules }}
+    ip_rules       = {{ vault.network_acls.ip_rules | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+  {{- end }}
+}
+
+{{- if vault.access_policies }}
+{{- for policy in vault.access_policies }}
+resource "azurerm_key_vault_access_policy" "{{ vault.name | string.downcase }}_{{ policy.name | string.downcase }}" {
+  key_vault_id = azurerm_key_vault.{{ vault.name | string.downcase }}.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = "{{ policy.object_id }}"
+
+  {{- if policy.key_permissions }}
+  key_permissions = [
+    {{- for perm in policy.key_permissions }}
+    "{{ perm }}",
+    {{- end }}
+  ]
+  {{- end }}
+  {{- if policy.secret_permissions }}
+  secret_permissions = [
+    {{- for perm in policy.secret_permissions }}
+    "{{ perm }}",
+    {{- end }}
+  ]
+  {{- end }}
+  {{- if policy.certificate_permissions }}
+  certificate_permissions = [
+    {{- for perm in policy.certificate_permissions }}
+    "{{ perm }}",
+    {{- end }}
+  ]
+  {{- end }}
+}
+{{- end }}
+{{- end }}
+{{ end }}

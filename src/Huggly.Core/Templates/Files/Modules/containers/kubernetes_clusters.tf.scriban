@@ -1,0 +1,48 @@
+# Modules/containers/kubernetes_clusters.tf.scriban
+
+{{- for cluster in kubernetes_clusters }}
+resource "azurerm_kubernetes_cluster" "{{ cluster.name | string.downcase }}" {
+  name                = "{{ cluster.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  dns_prefix          = "{{ cluster.dns_prefix }}"
+  {{- if cluster.kubernetes_version }}
+  kubernetes_version  = "{{ cluster.kubernetes_version }}"
+  {{- end }}
+  sku_tier            = "{{ cluster.sku_tier }}"
+
+  default_node_pool {
+    name                = "{{ cluster.default_node_pool.name }}"
+    vm_size             = "{{ cluster.default_node_pool.vm_size }}"
+    node_count          = {{ cluster.default_node_pool.node_count }}
+    {{- if cluster.default_node_pool.enable_auto_scaling }}
+    auto_scaling_enabled = true
+    min_count           = {{ cluster.default_node_pool.min_count }}
+    max_count           = {{ cluster.default_node_pool.max_count }}
+    {{- end }}
+    {{- if cluster.default_node_pool.vnet_subnet_id }}
+    vnet_subnet_id      = "{{ cluster.default_node_pool.vnet_subnet_id }}"
+    {{- end }}
+  }
+
+  identity {
+    type = "{{ cluster.identity.type }}"
+    {{- if cluster.identity.identity_ids }}
+    identity_ids = {{ cluster.identity.identity_ids | array.join ", " | string.prepend "[" | string.append "]" }}
+    {{- end }}
+  }
+
+  {{- if cluster.network_profile }}
+  network_profile {
+    network_plugin = "{{ cluster.network_profile.network_plugin }}"
+    {{- if cluster.network_profile.network_policy }}
+    network_policy = "{{ cluster.network_profile.network_policy }}"
+    {{- end }}
+    {{- if cluster.network_profile.service_cidr }}
+    service_cidr   = "{{ cluster.network_profile.service_cidr }}"
+    dns_service_ip = "{{ cluster.network_profile.dns_service_ip }}"
+    {{- end }}
+  }
+  {{- end }}
+}
+{{ end }}

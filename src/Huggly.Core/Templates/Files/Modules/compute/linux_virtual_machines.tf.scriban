@@ -1,0 +1,29 @@
+# Modules/compute/linux_virtual_machines.tf.scriban
+
+{{- for vm in linux_virtual_machines }}
+resource "azurerm_linux_virtual_machine" "{{ vm.name | string.downcase }}" {
+  name                  = "{{ vm.name }}-{{ environment }}"
+  resource_group_name   = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location              = "{{ location }}"
+  size                  = "{{ vm.size }}"
+  admin_username        = "{{ vm.admin_username }}"
+  network_interface_ids = [azurerm_network_interface.{{ vm.network_interface | string.downcase }}.id]
+
+  admin_ssh_key {
+    username   = "{{ vm.admin_username }}"
+    public_key = "{{ vm.ssh_public_key }}"
+  }
+
+  os_disk {
+    caching              = "{{ vm.os_disk.caching }}"
+    storage_account_type = "{{ vm.os_disk.storage_account_type }}"
+  }
+
+  source_image_reference {
+    publisher = "{{ vm.source_image.publisher }}"
+    offer     = "{{ vm.source_image.offer }}"
+    sku       = "{{ vm.source_image.sku }}"
+    version   = "{{ vm.source_image.version }}"
+  }
+}
+{{ end }}

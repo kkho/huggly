@@ -155,8 +155,6 @@ public class CompileCommand
       var content = await _templateLoader.RenderAsync(suffix, model, cancellationToken);
       await File.WriteAllTextAsync(Path.Combine(outputDirectory, outputFile), content, cancellationToken);
     }
-
-
   }
 
   private static IEnumerable<string>? GetTemplateResources(string prefix) =>

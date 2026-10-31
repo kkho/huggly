@@ -1,0 +1,26 @@
+# Modules/monitoring/monitor_diagnostic_settings.tf.scriban
+
+{{- for setting in monitor_diagnostic_settings }}
+resource "azurerm_monitor_diagnostic_setting" "{{ setting.name | string.downcase }}" {
+  name                       = "{{ setting.name }}"
+  target_resource_id         = "{{ setting.target_resource_id }}"
+  {{- if setting.log_analytics_workspace }}
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.{{ setting.log_analytics_workspace | string.downcase }}.id
+  {{- end }}
+  {{- if setting.storage_account }}
+  storage_account_id         = azurerm_storage_account.{{ setting.storage_account | string.downcase }}.id
+  {{- end }}
+
+  {{- for category in setting.enabled_logs }}
+  enabled_log {
+    category = "{{ category }}"
+  }
+  {{- end }}
+
+  {{- for metric in setting.metrics }}
+  enabled_metric {
+    category = "{{ metric }}"
+  }
+  {{- end }}
+}
+{{ end }}

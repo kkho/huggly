@@ -1,0 +1,12 @@
+# Modules/identity/role_assignments.tf.scriban
+
+{{- for assignment in role_assignments }}
+resource "azurerm_role_assignment" "{{ assignment.name | string.downcase }}" {
+  scope                = "{{ assignment.scope }}"
+  role_definition_name = "{{ assignment.role_definition_name }}"
+  principal_id         = "{{ assignment.principal_id }}"
+  {{- if assignment.principal_type }}
+  principal_type       = "{{ assignment.principal_type }}"
+  {{- end }}
+}
+{{ end }}

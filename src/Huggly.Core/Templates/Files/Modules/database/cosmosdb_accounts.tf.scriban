@@ -1,0 +1,31 @@
+# Modules/database/cosmosdb_accounts.tf.scriban
+
+{{- for account in cosmosdb_accounts }}
+resource "azurerm_cosmosdb_account" "{{ account.name | string.downcase }}" {
+  name                = "{{ account.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  offer_type          = "{{ account.offer_type }}"
+  kind                = "{{ account.kind }}"
+
+  consistency_policy {
+    consistency_level = "{{ account.consistency_level }}"
+  }
+
+  {{- for geo in account.geo_locations }}
+  geo_location {
+    location          = "{{ geo.location }}"
+    failover_priority = {{ geo.failover_priority }}
+    zone_redundant    = {{ geo.zone_redundant | string.downcase }}
+  }
+  {{- end }}
+
+  {{- if account.capabilities }}
+  {{- for capability in account.capabilities }}
+  capabilities {
+    name = "{{ capability }}"
+  }
+  {{- end }}
+  {{- end }}
+}
+{{ end }}

@@ -1,0 +1,35 @@
+# Modules/networking/load_balancers.tf.scriban
+
+{{- for lb in load_balancers }}
+resource "azurerm_lb" "{{ lb.name | string.downcase }}" {
+  name                = "{{ lb.name }}-{{ environment }}"
+  resource_group_name = azurerm_resource_group.{{ system_name | string.downcase }}.name
+  location            = "{{ location }}"
+  sku                 = "{{ lb.sku }}"
+
+  {{- for feip in lb.frontend_ip_configurations }}
+  frontend_ip_configuration {
+    name                 = "{{ feip.name }}"
+    {{- if feip.public_ip }}
+    public_ip_address_id = azurerm_public_ip.{{ feip.public_ip | string.downcase }}.id
+    {{- end }}
+    {{- if feip.subnet_id }}
+    subnet_id            = "{{ feip.subnet_id }}"
+    {{- end }}
+    {{- if feip.private_ip_address }}
+    private_ip_address            = "{{ feip.private_ip_address }}"
+    private_ip_address_allocation = "Static"
+    {{- end }}
+  }
+  {{- end }}
+}
+
+{{- if lb.backend_pools }}
+{{- for pool in lb.backend_pools }}
+resource "azurerm_lb_backend_address_pool" "{{ lb.name | string.downcase }}_{{ pool.name | string.downcase }}" {
+  name            = "{{ pool.name }}"
+  loadbalancer_id = azurerm_lb.{{ lb.name | string.downcase }}.id
+}
+{{- end }}
+{{- end }}
+{{ end }}
