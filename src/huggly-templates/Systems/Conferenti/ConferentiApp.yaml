@@ -10,7 +10,7 @@ siteConfig:
   ftpsState: Disabled
   healthCheckPath: /health
   applicationStack:
-    dotnetVersion: "10"
+    dotnetVersion: "10.0"
 appSettings:
   ASPNETCORE_ENVIRONMENT: Production
 landing-zone:

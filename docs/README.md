@@ -69,6 +69,8 @@ terraform validate
 
 `-backend=false` skips the remote state backend, so you can validate without Azure or Terraform Cloud credentials. **This currently fails.** See [Known issues](#known-issues).
 
+To check every environment at once, run `scripts/check.sh` in Git Bash. See [Validate, plan and apply](DEPLOY.md#1-run-the-check-no-azure-needed).
+
 ## 4. Run a local Kubernetes cluster
 
 [`src/Huggly.Core/Templates/Files/local-k8s/main.tf`](../src/Huggly.Core/Templates/Files/local-k8s/main.tf) is a hand-written Terraform configuration that creates a kind cluster named `huggly-local` (one control-plane node, one worker) and installs Argo CD with Helm. Huggly doesn't generate this file. It's a local stand-in for AKS while you work on the templates.
@@ -153,9 +155,9 @@ terraform apply
 
 ## 5. Deploying to Azure (later)
 
-Huggly can't generate AKS yet. Generic resource kinds such as `KubernetesCluster` aren't wired into the compiler. Once they are, the flow will be: compile, `az login`, `az account set --subscription <id>`, `terraform apply` in the output folder, then `az aks get-credentials` to connect with kubectl.
+See [Validate, plan and apply](DEPLOY.md) for the one-time Azure setup (sign-in, state storage, permissions) and how to plan, apply and tear down an environment.
 
-Before applying, check which subscription `az` is signed in to (`az account show`). The generated `main.tf` deploys to the `subscription_id` in the system YAML.
+Huggly can't generate AKS yet: the `KubernetesCluster` kind isn't wired into the compiler. Once it is, connect to a deployed cluster with `az aks get-credentials`.
 
 ## Known issues
 

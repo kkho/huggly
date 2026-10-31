@@ -1,6 +1,7 @@
 # Common/versions.tf.scriban
 
 terraform {
+  required_version = ">= 1.5.0"
   required_providers {
     azuread = {
       source  = "hashicorp/azuread"
@@ -49,7 +50,5 @@ terraform {
     null = {
       source = "hashicorp/null"
     }
-
-    required_version = ">= 1.0.0"
   }
 }
