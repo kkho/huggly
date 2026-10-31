@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/kkho/huggly
     targetRevision: main
-    path: deploy/local/hello
+    path: examples/kubernetes/deploy/local/hello
   destination:
     server: https://kubernetes.default.svc
     namespace: hello
