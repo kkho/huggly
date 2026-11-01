@@ -1,7 +1,7 @@
 # Common/backend.tf.scriban
 
 terraform {
-  {{ if Environment == "sandbox" || Environment == "development" }}
+  {{ if Environment == "sandbox" || Environment == "dev" }}
   # Dev environments use local backend for faster iteration
   backend "local" {
     path = "terraform-{{ Environment }}.tfstate"
@@ -9,10 +9,10 @@ terraform {
   {{ else }}
   backend "remote" {
     hostname = "app.terraform.io"
-    organization = "{{ TerraformCloudOrganization }}"
+    organization = "{{ terraformCloudOrganization }}"
     
     workspaces {
-      name = "{{ TerraformCloudWorkspace }}"
+      name = "{{ terraformCloudWorkspace }}"
     }
   }
   {{ end }}

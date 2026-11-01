@@ -113,4 +113,5 @@ Dockerfile* # DO NOT ignore this (keep it tracked!)
 
 # kubeconfig with cluster-admin credentials, written by the kind provider
 huggly-local-config
+huggly-outputs/*
 huggly-outputs/**/.terraform.lock.hcl
