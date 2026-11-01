@@ -5,7 +5,7 @@ provider "azurerm" {
   subscription_id = "{{ subscriptionId }}"
 }
 
-resource "azurerm_resource_group" "{{ systemName | string.downcase }}" {
+resource "azurerm_resource_group" "{{ randomName | string.downcase }}" {
   name     = "rg-{{ systemName | string.downcase }}-{{ environment }}"
   location = "{{ location }}"
 }
