@@ -1,0 +1,54 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Huggly: compile (pick system and environment)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Huggly.CLI/bin/Debug/net10.0/Huggly.CLI.dll",
+      "args": [
+        "compile",
+        "--definitions", "src/huggly-templates/Systems/${input:system}",
+        "--environment", "${input:environment}",
+        "--output", "huggly-outputs"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true
+    },
+    {
+      "name": "Huggly: compile Conferenti dev",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Huggly.CLI/bin/Debug/net10.0/Huggly.CLI.dll",
+      "args": [
+        "compile",
+        "--definitions", "src/huggly-templates/Systems/Conferenti",
+        "--environment", "dev",
+        "--output", "huggly-outputs"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true
+    }
+  ],
+  "inputs": [
+    {
+      "id": "system",
+      "type": "promptString",
+      "description": "System folder under src/huggly-templates/Systems",
+      "default": "Conferenti"
+    },
+    {
+      "id": "environment",
+      "type": "pickString",
+      "description": "Landing zone to compile",
+      "options": ["dev", "test", "prod"],
+      "default": "dev"
+    }
+  ]
+}
