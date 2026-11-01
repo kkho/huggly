@@ -1,19 +1,18 @@
 # Common/backend.tf.scriban
 
 terraform {
-  {{ if environment == "sandbox" || environment == "dev" }}
-  # Dev environments use local backend for faster iteration
-  backend "local" {
-    path = "terraform-{{ environment }}.tfstate"
-  }
-  {{ else }}
-  backend "remote" {
+  {{ if state_backend == "remote" }}
+  cloud {
     hostname = "app.terraform.io"
     organization = "{{ terraform_cloud_organization }}"
     
     workspaces {
       name = "{{ terraform_cloud_workspace }}"
     }
+  }
+  {{ else }}
+  backend "local" {
+    path = "../../.tfstate/{{ system_name | string.downcase }}/{{ environment }}.tfstate"
   }
   {{ end }}
 }
