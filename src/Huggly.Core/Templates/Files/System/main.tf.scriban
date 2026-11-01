@@ -6,6 +6,6 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "{{ systemName | string.downcase }}" {
-  name     = "rg-{{ systemName | string.downcase }}-{{ environment }}"
+  name     = "rg-{{ randomNmae | string.downcase }}-{{ environment }}"
   location = "{{ location }}"
 }
