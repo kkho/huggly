@@ -67,9 +67,9 @@ terraform init -backend=false
 terraform validate
 ```
 
-`-backend=false` skips the remote state backend, so you can validate without Azure or Terraform Cloud credentials. **This currently fails.** See [Known issues](#known-issues).
+`-backend=false` skips the state backend, so you can validate without Azure or Terraform Cloud credentials.
 
-To check every environment at once, run `scripts/check.sh` in Git Bash. See [Validate, plan and apply](DEPLOY.md#1-run-the-check-no-azure-needed).
+To check every environment at once, run `scripts/check.sh` in Git Bash. See [Validate, plan and apply](DEPLOY.md#1-run-the-check-no-azure-needed). The same script runs in GitHub Actions ([`.github/workflows/check.yml`](../.github/workflows/check.yml)) on every pull request and push to `main`, with Terraform pinned to the version in that file. When you upgrade Terraform locally, update the pin too.
 
 ## 4. Run a local Kubernetes cluster
 
@@ -159,13 +159,30 @@ See [Validate, plan and apply](DEPLOY.md) for the one-time Azure setup (sign-in,
 
 Huggly can't generate AKS yet: the `KubernetesCluster` kind isn't wired into the compiler. Once it is, connect to a deployed cluster with `az aks get-credentials`.
 
+## Naming rules
+
+**In `.scriban` templates, every variable is snake_case.** Where a name comes from decides how you write it in YAML:
+
+| Value comes from | In YAML | In the template | Why |
+|---|---|---|---|
+| Added by the compiler (`BuildModel` in [CompileCommand.cs](../src/Huggly.CLI/Commands/CompileCommand.cs)) | n/a | `system_name`, `environment` | Set as snake_case model keys |
+| Keys under `data:` in a system YAML | `subscription_id: ...` | `{{ subscription_id }}` | Passed through **unchanged**, so the YAML key must already be snake_case |
+| Properties of typed kinds (AppService, AppServicePlan, ...) | `healthCheckPath: /health` | `{{ app.site_config.health_check_path }}` | YAML maps to a C# property through `[YamlMember(Alias = ...)]`, and the `MemberRenamer` in [TemplateLoader.cs](../src/Huggly.Core/Services/TemplateLoader.cs) turns C# property names into snake_case |
+
+A name that doesn't exist renders as an **empty string**, with no error. To find names that break the rule:
+
+```bash
+grep -rnE "\{\{[^}]*[A-Z]" src/Huggly.Core/Templates/Files/System src/Huggly.Core/Templates/Files/Common src/Huggly.Core/Templates/Files/Modules
+```
+
+It should print nothing. The templates in `Templates/Files/Kubernetes/` are old, use PascalCase and are never rendered. Don't copy from them.
+
 ## Known issues
 
-These make `terraform init` fail on the generated output today:
-
-- **`required_providers` is declared twice.** Both `System/main.tf.scriban` and `Common/versions.tf.scriban` declare it, and Terraform allows only one per module.
-- **`required_version` is in the wrong block.** In `Common/versions.tf.scriban` it sits inside `required_providers`, but it belongs directly in the `terraform` block.
-- **The backend template uses PascalCase names** (`Environment`, `TerraformCloudOrganization`) while the model uses snake_case. It always renders the remote backend with an empty organization and workspace. `-backend=false` works around this for validation only.
+- **The state backend isn't ready for deploying.** `Common/backend.tf.scriban` renders a `local` backend for dev, which stores the state inside the output folder that every compile deletes, and a Terraform Cloud `remote` backend for test and prod with an empty organization and workspace. Validation isn't affected (`-backend=false`), but don't run `terraform apply` until the backend has been chosen and fixed. [DEPLOY.md](DEPLOY.md) describes the azurerm option.
+- **`Common/versions.tf.scriban` lists 11 providers**, but the generated output only uses azurerm. `terraform init` downloads them all, which makes it slow.
+- **Mistakes in definitions are silently ignored.** A resource whose `system:` doesn't match a system's `name:`, or whose `kind` the compiler doesn't handle, is dropped without an error. Only App Service Plans and App Services are compiled today.
+- **Missing template variables render empty** instead of failing the compile. Terraform reports them later as odd syntax errors. See [Troubleshooting](#troubleshooting).
 
 ## Troubleshooting
 
@@ -175,4 +192,5 @@ These make `terraform init` fail on the generated output today:
 | `failed to connect to the docker API at npipe:////./pipe/docker_engine` | Container engine not running | `podman machine start` (or start Docker Desktop), then `docker ps` |
 | `kubectl` says `connection refused` on `127.0.0.1:<port>` | Cluster container stopped after a restart | Recreate the cluster as shown in [After restarting your PC](#after-restarting-your-pc) |
 | Podman shows `Currently starting` but never finishes | Machine stuck | `podman machine stop`, then `podman machine start` |
-| Compile writes nothing for a new resource YAML | Only App Service Plans and App Services are wired into the compiler today | Expected until generic resource kinds are implemented |
+| Compile writes nothing for a new resource YAML | Only App Service Plans and App Services are wired into the compiler today, or `system:` doesn't match the system's `name:` | Check the `system:` spelling. Other kinds are expected to be missing until generic resource kinds are implemented |
+| Terraform reports `..`, `""` or `name =` with nothing after it, e.g. `azurerm_resource_group..name` | A template variable rendered empty: the name is misspelled, not snake_case, or missing from the YAML `data:` | Find the `{{ }}` at that spot in the `.scriban` file and check the name against the [naming rules](#naming-rules). To see every available name, set a breakpoint on `return model;` in `BuildModel` and inspect `model` |

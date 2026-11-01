@@ -75,7 +75,7 @@ public class CompileCommand
   {
     var model = new ScriptObject
     {
-      { "systemName", systemName },
+      { "system_name", systemName },
       { "environment", environment }
     };
 

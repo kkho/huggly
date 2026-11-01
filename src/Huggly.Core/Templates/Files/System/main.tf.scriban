@@ -2,10 +2,10 @@
 
 provider "azurerm" {
   features {}
-  subscription_id = "{{ subscriptionId }}"
+  subscription_id = "{{ subscription_id }}"
 }
 
-resource "azurerm_resource_group" "{{ systemName | string.downcase }}" {
-  name     = "rg-{{ systemName | string.downcase }}-{{ environment }}"
+resource "azurerm_resource_group" "{{ system_name | string.downcase }}" {
+  name     = "rg-{{ system_name | string.downcase }}-{{ environment }}"
   location = "{{ location }}"
 }
