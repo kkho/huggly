@@ -75,8 +75,8 @@ public class CompileCommand
   {
     var model = new ScriptObject
     {
-      { "SystemName", systemName },
-      { "Environment", environment }
+      { "systemName", systemName },
+      { "environment", environment }
     };
 
     foreach (var (key, value) in data)
