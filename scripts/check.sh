@@ -3,7 +3,7 @@
 # Usage (from anywhere in the repo): scripts/check.sh [system] default system: Conferenti
 set -uo pipefail
 
-SYSTEM="${1:=Conferenti}"
+SYSTEM="${1:-Conferenti}"
 ENVIRONMENTS=(dev test prod)
 
 cd "$(dirname "$0")/.."
