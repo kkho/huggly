@@ -3,8 +3,18 @@ name: Conferenti
 data:
   location: norwayeast
   subscription_id: 00000000-0000-0000-0000-000000000000
+  state_backend: local
+  terraform_cloud_organization: conferenti
 
 landing-zone:
-  dev: {}
-  test: {}
-  prod: {}
+  dev:
+    data:
+      terraform_cloud_workspace: conferenti-dev
+  test:
+    data:
+      state_backend: remote
+      terraform_cloud_workspace: conferenti-test
+  prod:
+    data:
+      state_backend: remote
+      terraform_cloud_workspace: conferenti-prod
