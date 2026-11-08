@@ -39,5 +39,4 @@ Use local for development and debugging now. Move a system to Terraform Cloud wh
 - CI only validates the backend a system actually uses (`terraform init -backend=false` skips the backend). Until a system uses `remote`, the Terraform Cloud branch of the template is only checked by reading its output.
 - A misspelled value such as `state_backend: remte` falls back to local without an error. A missing `terraform_cloud_workspace` renders an empty workspace name.
 - The sample system Conferenti uses `remote` for test and prod to show that both branches generate. Its organization and workspaces don't exist in HCP Terraform, so only dev can be planned and applied until they are created.
-- Moving a system from local to Terraform Cloud later means migrating its existing state (`terraform init -migrate-state`), not just changing the YAML.
-- [DEPLOY.md](../DEPLOY.md) describes the azurerm setup and must be updated to match this decision.
+- Moving a system from local to Terraform Cloud later means migrating its existing state (`terraform init -migrate-state`), not just changing the YAML. [DEPLOY.md](../DEPLOY.md#move-a-system-from-local-to-remote) describes how.
