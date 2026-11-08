@@ -155,7 +155,7 @@ terraform apply
 
 ## 5. Deploying to Azure (later)
 
-See [Validate, plan and apply](DEPLOY.md) for the one-time Azure setup (sign-in, state storage, permissions) and how to plan, apply and tear down an environment.
+See [Validate, plan and apply](DEPLOY.md) for the one-time setup (Azure sign-in, choosing local or HCP Terraform state) and how to plan, apply and tear down an environment.
 
 Huggly can't generate AKS yet: the `KubernetesCluster` kind isn't wired into the compiler. Once it is, connect to a deployed cluster with `az aks get-credentials`.
 
@@ -179,7 +179,7 @@ It should print nothing. The templates in `Templates/Files/Kubernetes/` are old,
 
 ## Known issues
 
-- **The state backend isn't ready for deploying.** `Common/backend.tf.scriban` renders a `local` backend for dev, which stores the state inside the output folder that every compile deletes, and a Terraform Cloud `remote` backend for test and prod with an empty organization and workspace. Validation isn't affected (`-backend=false`), but don't run `terraform apply` until the backend has been chosen and fixed. [DEPLOY.md](DEPLOY.md) describes the azurerm option.
+- **Local state lives on one PC and has no locking.** It's the default `state_backend`. Don't delete `huggly-outputs/` while resources exist. See [ADR 0001](decisions/0001-terraform-state-backend.md) and [Choose where the state lives](DEPLOY.md#choose-where-the-state-lives).
 - **`Common/versions.tf.scriban` lists 11 providers**, but the generated output only uses azurerm. `terraform init` downloads them all, which makes it slow.
 - **Mistakes in definitions are silently ignored.** A resource whose `system:` doesn't match a system's `name:`, or whose `kind` the compiler doesn't handle, is dropped without an error. Only App Service Plans and App Services are compiled today.
 - **Missing template variables render empty** instead of failing the compile. Terraform reports them later as odd syntax errors. See [Troubleshooting](#troubleshooting).
