@@ -6,15 +6,15 @@ This guide gets a Windows machine ready to build Huggly, compile the sample syst
 
 ## 1. Install the tools
 
-| Tool | Needed for | Install |
-|---|---|---|
-| .NET 10 SDK | building and running the Huggly CLI | `winget install Microsoft.DotNet.SDK.10` |
-| Terraform 1.5+ | validating generated output, local cluster | `winget install Hashicorp.Terraform` |
-| kind | local Kubernetes cluster | `winget install Kubernetes.kind` |
-| kubectl | talking to the cluster | `winget install Kubernetes.kubectl` |
-| Podman **or** Docker Desktop | running the kind cluster | `winget install RedHat.Podman` or `winget install Docker.DockerDesktop` |
-| Helm | optional, for inspecting charts by hand | `winget install Helm.Helm` |
-| Azure CLI + kubelogin | only for deploying to real Azure | `winget install Microsoft.AzureCLI`, then `az aks install-cli` |
+| Tool                         | Needed for                                 | Install                                                                 |
+| ---------------------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
+| .NET 10 SDK                  | building and running the Huggly CLI        | `winget install Microsoft.DotNet.SDK.10`                                |
+| Terraform 1.5+               | validating generated output, local cluster | `winget install Hashicorp.Terraform`                                    |
+| kind                         | local Kubernetes cluster                   | `winget install Kubernetes.kind`                                        |
+| kubectl                      | talking to the cluster                     | `winget install Kubernetes.kubectl`                                     |
+| Podman **or** Docker Desktop | running the kind cluster                   | `winget install RedHat.Podman` or `winget install Docker.DockerDesktop` |
+| Helm                         | optional, for inspecting charts by hand    | `winget install Helm.Helm`                                              |
+| Azure CLI + kubelogin        | only for deploying to real Azure           | `winget install Microsoft.AzureCLI`, then `az aks install-cli`          |
 
 Open a new terminal after installing so the tools are on your `PATH`. Check them with:
 
@@ -51,11 +51,11 @@ dotnet run --project src/Huggly.CLI -- compile --definitions src/huggly-template
 
 The Terraform files are written to `huggly-outputs/<environment>/<system>/`, for example `huggly-outputs/dev/Conferenti/`. The folder is deleted and recreated on every compile.
 
-| Option | Meaning | Default |
-|---|---|---|
+| Option          | Meaning                                              | Default       |
+| --------------- | ---------------------------------------------------- | ------------- |
 | `--definitions` | folder searched recursively for `*.yaml` definitions | `definitions` |
-| `--environment` | landing zone to compile (`dev`, `test`, `prod`) | `dev` |
-| `--output` | root folder for generated Terraform | `output` |
+| `--environment` | landing zone to compile (`dev`, `test`, `prod`)      | `dev`         |
+| `--output`      | root folder for generated Terraform                  | `output`      |
 
 The defaults for `--definitions` and `--output` don't match this repository's folders, so always pass both.
 
@@ -163,11 +163,11 @@ Huggly can't generate AKS yet: the `KubernetesCluster` kind isn't wired into the
 
 **In `.scriban` templates, every variable is snake_case.** Where a name comes from decides how you write it in YAML:
 
-| Value comes from | In YAML | In the template | Why |
-|---|---|---|---|
-| Added by the compiler (`BuildModel` in [CompileCommand.cs](../src/Huggly.CLI/Commands/CompileCommand.cs)) | n/a | `system_name`, `environment` | Set as snake_case model keys |
-| Keys under `data:` in a system YAML | `subscription_id: ...` | `{{ subscription_id }}` | Passed through **unchanged**, so the YAML key must already be snake_case |
-| Properties of typed kinds (AppService, AppServicePlan, ...) | `healthCheckPath: /health` | `{{ app.site_config.health_check_path }}` | YAML maps to a C# property through `[YamlMember(Alias = ...)]`, and the `MemberRenamer` in [TemplateLoader.cs](../src/Huggly.Core/Services/TemplateLoader.cs) turns C# property names into snake_case |
+| Value comes from                                                                                          | In YAML                    | In the template                           | Why                                                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Added by the compiler (`BuildModel` in [CompileCommand.cs](../src/Huggly.CLI/Commands/CompileCommand.cs)) | n/a                        | `system_name`, `environment`              | Set as snake_case model keys                                                                                                                                                                          |
+| Keys under `data:` in a system YAML                                                                       | `subscription_id: ...`     | `{{ subscription_id }}`                   | Passed through **unchanged**, so the YAML key must already be snake_case                                                                                                                              |
+| Properties of typed kinds (AppService, AppServicePlan, ...)                                               | `healthCheckPath: /health` | `{{ app.site_config.health_check_path }}` | YAML maps to a C# property through `[YamlMember(Alias = ...)]`, and the `MemberRenamer` in [TemplateLoader.cs](../src/Huggly.Core/Services/TemplateLoader.cs) turns C# property names into snake_case |
 
 A name that doesn't exist renders as an **empty string**, with no error. To find names that break the rule:
 
@@ -180,17 +180,16 @@ It should print nothing. The templates in `Templates/Files/Kubernetes/` are old,
 ## Known issues
 
 - **Local state lives on one PC and has no locking.** It's the default `state_backend`. Don't delete `huggly-outputs/` while resources exist. See [ADR 0001](decisions/0001-terraform-state-backend.md) and [Choose where the state lives](DEPLOY.md#choose-where-the-state-lives).
-- **`Common/versions.tf.scriban` lists 11 providers**, but the generated output only uses azurerm. `terraform init` downloads them all, which makes it slow.
 - **Mistakes in definitions are silently ignored.** A resource whose `system:` doesn't match a system's `name:`, or whose `kind` the compiler doesn't handle, is dropped without an error. Only App Service Plans and App Services are compiled today.
 - **Missing template variables render empty** instead of failing the compile. Terraform reports them later as odd syntax errors. See [Troubleshooting](#troubleshooting).
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `unknown command "kubectl" for "kind create cluster"` | Running in cmd, where `;` doesn't separate commands | Switch to PowerShell, or run each command on its own line |
-| `failed to connect to the docker API at npipe:////./pipe/docker_engine` | Container engine not running | `podman machine start` (or start Docker Desktop), then `docker ps` |
-| `kubectl` says `connection refused` on `127.0.0.1:<port>` | Cluster container stopped after a restart | Recreate the cluster as shown in [After restarting your PC](#after-restarting-your-pc) |
-| Podman shows `Currently starting` but never finishes | Machine stuck | `podman machine stop`, then `podman machine start` |
-| Compile writes nothing for a new resource YAML | Only App Service Plans and App Services are wired into the compiler today, or `system:` doesn't match the system's `name:` | Check the `system:` spelling. Other kinds are expected to be missing until generic resource kinds are implemented |
-| Terraform reports `..`, `""` or `name =` with nothing after it, e.g. `azurerm_resource_group..name` | A template variable rendered empty: the name is misspelled, not snake_case, or missing from the YAML `data:` | Find the `{{ }}` at that spot in the `.scriban` file and check the name against the [naming rules](#naming-rules). To see every available name, set a breakpoint on `return model;` in `BuildModel` and inspect `model` |
+| Symptom                                                                                             | Cause                                                                                                                      | Fix                                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unknown command "kubectl" for "kind create cluster"`                                               | Running in cmd, where `;` doesn't separate commands                                                                        | Switch to PowerShell, or run each command on its own line                                                                                                                                                               |
+| `failed to connect to the docker API at npipe:////./pipe/docker_engine`                             | Container engine not running                                                                                               | `podman machine start` (or start Docker Desktop), then `docker ps`                                                                                                                                                      |
+| `kubectl` says `connection refused` on `127.0.0.1:<port>`                                           | Cluster container stopped after a restart                                                                                  | Recreate the cluster as shown in [After restarting your PC](#after-restarting-your-pc)                                                                                                                                  |
+| Podman shows `Currently starting` but never finishes                                                | Machine stuck                                                                                                              | `podman machine stop`, then `podman machine start`                                                                                                                                                                      |
+| Compile writes nothing for a new resource YAML                                                      | Only App Service Plans and App Services are wired into the compiler today, or `system:` doesn't match the system's `name:` | Check the `system:` spelling. Other kinds are expected to be missing until generic resource kinds are implemented                                                                                                       |
+| Terraform reports `..`, `""` or `name =` with nothing after it, e.g. `azurerm_resource_group..name` | A template variable rendered empty: the name is misspelled, not snake_case, or missing from the YAML `data:`               | Find the `{{ }}` at that spot in the `.scriban` file and check the name against the [naming rules](#naming-rules). To see every available name, set a breakpoint on `return model;` in `BuildModel` and inspect `model` |
