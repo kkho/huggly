@@ -18,7 +18,7 @@ public class TemplateLoader
     using var reader = new StreamReader(stream);
     var templateText = await reader.ReadToEndAsync(cancellationToken);
 
-    var template = Template.Parse(templateText);
+    var template = Template.Parse(templateText, resourceSuffix);
     if (template.HasErrors)
     {
       throw new InvalidOperationException(string.Join('\n', template.Messages));
