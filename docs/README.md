@@ -169,7 +169,7 @@ Huggly can't generate AKS yet: the `KubernetesCluster` kind isn't wired into the
 | Keys under `data:` in a system YAML                                                                       | `subscription_id: ...`     | `{{ subscription_id }}`                   | Passed through **unchanged**, so the YAML key must already be snake_case                                                                                                                              |
 | Properties of typed kinds (AppService, AppServicePlan, ...)                                               | `healthCheckPath: /health` | `{{ app.site_config.health_check_path }}` | YAML maps to a C# property through `[YamlMember(Alias = ...)]`, and the `MemberRenamer` in [TemplateLoader.cs](../src/Huggly.Core/Services/TemplateLoader.cs) turns C# property names into snake_case |
 
-A name that doesn't exist renders as an **empty string**, with no error. To find names that break the rule:
+A variable that doesn't exist **fails the compile** with `The variable or function 'x' was not found`, naming the template, line and column. Optional `data:` keys get their default in `BuildModel` (today only `state_backend`, default `local`). To find names that break the rule:
 
 ```bash
 grep -rnE "\{\{[^}]*[A-Z]" src/Huggly.Core/Templates/Files/System src/Huggly.Core/Templates/Files/Common src/Huggly.Core/Templates/Files/Modules
@@ -181,7 +181,6 @@ It should print nothing. The templates in `Templates/Files/Kubernetes/` are old,
 
 - **Local state lives on one PC and has no locking.** It's the default `state_backend`. Don't delete `huggly-outputs/` while resources exist. See [ADR 0001](decisions/0001-terraform-state-backend.md) and [Choose where the state lives](DEPLOY.md#choose-where-the-state-lives).
 - **Only App Service Plans and App Services are compiled today.** Any other kind, such as `AksCluster`, fails the compile with `not supported yet` until generic resource kinds are implemented.
-- **Missing template variables render empty** instead of failing the compile. Terraform reports them later as odd syntax errors. See [Troubleshooting](#troubleshooting).
 
 ## Troubleshooting
 
@@ -194,4 +193,4 @@ It should print nothing. The templates in `Templates/Files/Kubernetes/` are old,
 | `<file>: <Kind> refers to system 'X', but no system with that name exists`                          | `system:` doesn't match any system's `name:`. The match is case-sensitive                                                  | Fix the spelling. The message lists the known systems                                                                                                                                                                   |
 | `<file>: kind 'X' is not supported yet`                                                             | The kind is known but isn't wired into the compiler. Only App Service Plans and App Services are today                    | Expected until generic resource kinds are implemented                                                                                                                                                                   |
 | `<file>:` followed by a YAML error about `kind`                                                     | The `kind:` value is misspelled                                                                                            | Use `System`, `AppServicePlan` or `AppService`                                                                                                                                                                          |
-| Terraform reports `..`, `""` or `name =` with nothing after it, e.g. `azurerm_resource_group..name` | A template variable rendered empty: the name is misspelled, not snake_case, or missing from the YAML `data:`               | Find the `{{ }}` at that spot in the `.scriban` file and check the name against the [naming rules](#naming-rules). To see every available name, set a breakpoint on `return model;` in `BuildModel` and inspect `model` |
+| `<template>(line,col) : error : The variable or function 'x' was not found`                          | The name is misspelled, not snake_case, or missing from the YAML `data:`                                                    | Open the template at that line and check the name against the [naming rules](#naming-rules). To see every available name, set a breakpoint on `return model;` in `BuildModel` and inspect `model`. A key that should be optional needs a default in `BuildModel` |

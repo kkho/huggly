@@ -24,9 +24,13 @@ public class TemplateLoader
       throw new InvalidOperationException(string.Join('\n', template.Messages));
     }
 
-    var context = new TemplateContext();
-    context.MemberRenamer = member =>
-        Regex.Replace(member.Name, "([A-Z])", m => "_" + m.Value.ToLower()).TrimStart('_');
+    var context = new TemplateContext
+    {
+      // A variable that isn't in the model fails the compile instead of rendering empty.
+      StrictVariables = true,
+      MemberRenamer = member =>
+        Regex.Replace(member.Name, "([A-Z])", m => "_" + m.Value.ToLower()).TrimStart('_')
+    };
     context.PushGlobal(model);
     return await template.RenderAsync(context);
   }
