@@ -90,6 +90,8 @@ public class CompileCommand
       model.Add("state_backend", "local");
     }
 
+    ValidateStateBackend(systemName, environment, model);
+
     var resolvedApps = context.AppServices
     .Select(app => app.ResolveFor(environment))
     .ToList();
@@ -98,6 +100,32 @@ public class CompileCommand
     model.Add("app_services", resolvedApps);
 
     return model;
+  }
+
+  // See docs/decisions/0001-terraform-state-backend.md.
+  private static void ValidateStateBackend(string systemName, string environment, ScriptObject model)
+  {
+    var where = $"System '{systemName}', environment '{environment}'";
+    var backend = model["state_backend"]?.ToString();
+
+    switch (backend)
+    {
+      case "local":
+        return;
+
+      case "remote":
+        foreach (var key in new[] { "terraform_cloud_organization", "terraform_cloud_workspace" })
+        {
+          if (string.IsNullOrWhiteSpace(model[key]?.ToString()))
+          {
+            throw new InvalidOperationException($"{where}: state_backend 'remote' needs '{key}' under data:.");
+          }
+        }
+        return;
+
+      default:
+        throw new InvalidOperationException($"{where}: state_backend '{backend}' is not valid. Use 'local' or 'remote'.");
+    }
   }
 
   private async Task RenderSystemTemplateAsync(string outputDirectory, ScriptObject model, SystemContext context, CancellationToken cancellationToken)
