@@ -37,6 +37,6 @@ Use local for development and debugging now. Move a system to Terraform Cloud wh
 - **Local state exists only on one PC.** Deleting the whole `huggly-outputs/` folder, or losing the PC, loses the state. `.tfstate/` must never be committed: it is covered by `huggly-outputs/*` and `*.tfstate` in `.gitignore`.
 - Local state has no locking. Don't run two `plan` or `apply` commands for the same system and environment at the same time.
 - CI only validates the backend a system actually uses (`terraform init -backend=false` skips the backend). Until a system uses `remote`, the Terraform Cloud branch of the template is only checked by reading its output.
-- A misspelled value such as `state_backend: remte` falls back to local without an error. A missing `terraform_cloud_workspace` renders an empty workspace name.
+- A misspelled value such as `state_backend: remte` falls back to local without an error. A missing `terraform_cloud_workspace` with `remote` fails the compile, since templates run with strict variables.
 - The sample system Conferenti uses `remote` for test and prod to show that both branches generate. Its organization and workspaces don't exist in HCP Terraform, so only dev can be planned and applied until they are created.
 - Moving a system from local to Terraform Cloud later means migrating its existing state (`terraform init -migrate-state`), not just changing the YAML. [DEPLOY.md](../DEPLOY.md#move-a-system-from-local-to-remote) describes how.

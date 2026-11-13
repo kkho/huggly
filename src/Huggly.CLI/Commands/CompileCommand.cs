@@ -84,6 +84,12 @@ public class CompileCommand
       model.Add(key, value);
     }
 
+    // Optional data: keys. Templates run with StrictVariables, so a missing key would fail the compile.
+    if (!model.ContainsKey("state_backend"))
+    {
+      model.Add("state_backend", "local");
+    }
+
     var resolvedApps = context.AppServices
     .Select(app => app.ResolveFor(environment))
     .ToList();
