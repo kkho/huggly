@@ -2,6 +2,8 @@
 
 This guide gets a Windows machine ready to build Huggly, compile the sample system into Terraform, and run a local Kubernetes cluster. All commands are for **PowerShell** and run from the repository root (`D:\Hobby\huggly`) unless a step says otherwise.
 
+How the compiler works, and how to add a new kind: [ARCHITECTURE.md](ARCHITECTURE.md). Deploying: [DEPLOY.md](DEPLOY.md).
+
 > **Commands are written for PowerShell.** Some use `;` and `$env:`, which cmd doesn't understand. In cmd, `kind create cluster --name x; kubectl get nodes` fails with `unknown command "kubectl"`. The local cluster steps also have a [cmd version](#using-cmd-instead-of-powershell).
 
 ## 1. Install the tools
