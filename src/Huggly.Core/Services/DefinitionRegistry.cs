@@ -12,7 +12,7 @@ namespace Huggly.Core.Services;
 
 public class DefinitionRegistry
 {
-  private readonly List<(DocumentEnvelope Envelope, YamlDocument Document)> _unresolved = [];
+  private readonly List<(DocumentEnvelope Envelope, YamlDocument Document, string Source)> _unresolved = [];
 
   public Dictionary<string, SystemContext> Systems { get; } = new();
 
@@ -20,47 +20,64 @@ public class DefinitionRegistry
       .IgnoreUnmatchedProperties()
       .Build();
 
-  public void Load(string yaml)
+  public void Load(string yaml, string source)
   {
-    var yamlStream = new YamlStream();
-    yamlStream.Load(new StringReader(yaml));
-
-    foreach (var document in yamlStream.Documents)
+    try
     {
-      var envelope = _deserializer.DeserializeYaml<DocumentEnvelope>(document);
+      var yamlStream = new YamlStream();
+      yamlStream.Load(new StringReader(yaml));
 
-      switch (envelope.Kind)
+      foreach (var document in yamlStream.Documents)
       {
-        case DefinitionKind.System:
-          var system = _deserializer.DeserializeYaml<SystemDefinition>(document);
-          Systems[system.Name] = new SystemContext
-          {
-            System = system
-          };
-          break;
+        var envelope = _deserializer.DeserializeYaml<DocumentEnvelope>(document);
+        if (envelope is null)
+        {
+          continue; // empty document, e.g. a trailing '---'
+        }
 
-        default:
-          _unresolved.Add((envelope, document));
-          break;
+        switch (envelope.Kind)
+        {
+          case DefinitionKind.System:
+            var system = _deserializer.DeserializeYaml<SystemDefinition>(document);
+            if (string.IsNullOrWhiteSpace(system?.Name))
+            {
+              throw new InvalidOperationException($"{source}: missing 'kind:', or a System without 'name:'.");
+            }
+            Systems[system.Name] = new SystemContext
+            {
+              System = system
+            };
+            break;
+
+          default:
+            _unresolved.Add((envelope, document, source));
+            break;
+        }
       }
+    }
+    catch (YamlException ex)
+    {
+      throw new InvalidOperationException($"{source}: {ex.Message} {ex.InnerException?.Message}", ex);
     }
   }
 
   public void Resolve()
   {
-    foreach (var (envelope, document) in _unresolved)
+    foreach (var (envelope, document, source) in _unresolved)
     {
-      AttachToSystem(envelope, document);
+      AttachToSystem(envelope, document, source);
     }
 
     _unresolved.Clear();
   }
 
-  private void AttachToSystem(DocumentEnvelope envelope, YamlDocument document)
+  private void AttachToSystem(DocumentEnvelope envelope, YamlDocument document, string source)
   {
     if (!Systems.TryGetValue(envelope.System, out var context))
     {
-      return;
+      var known = Systems.Count == 0 ? "none" : string.Join(", ", Systems.Keys);
+      throw new InvalidOperationException(
+        $"{source}: {envelope.Kind} refers to system '{envelope.System}', but no system with that name exists. Known systems: {known}");
     }
 
     switch (envelope.Kind)
@@ -71,7 +88,8 @@ public class DefinitionRegistry
       case DefinitionKind.AppService:
         context.AppServices.Add(_deserializer.DeserializeYaml<AppServiceDefinition>(document));
         break;
+      default:
+        throw new InvalidOperationException($"{source}: kind '{envelope.Kind}' is not supported yet.");
     }
-
   }
 }
