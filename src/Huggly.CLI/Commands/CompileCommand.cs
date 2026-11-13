@@ -30,7 +30,7 @@ public class CompileCommand
       foreach (var file in files)
       {
         var yaml = await File.ReadAllTextAsync(file, cancellationToken);
-        _definitionRegistry.Load(yaml);
+        _definitionRegistry.Load(yaml, file);
       }
 
       _definitionRegistry.Resolve();
