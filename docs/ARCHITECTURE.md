@@ -67,7 +67,7 @@ Templates are `.scriban` files under [src/Huggly.Core/Templates/Files/](../src/H
 | Folder | Rendered | Output |
 |---|---|---|
 | `System/` | Always | `main.tf` (provider, resource group) |
-| `Common/` | Always | `backend.tf`, `versions.tf` |
+| `Common/` | Always | `backend.tf`, `versions.tf`, `mock.tftest.hcl` (used by `terraform test`, ignored by `plan` and `apply`) |
 | `Modules/compute/` | Only if the model has a non-empty list with the template's name (`app_services.tf.scriban` → `app_services`) | `app_services.tf`, ... |
 
 The output file name is the template name without `.scriban`. The output folder `huggly-outputs/<environment>/<system>/` is **deleted and recreated** on every compile. Local Terraform state lives outside it, in `huggly-outputs/.tfstate/`.
@@ -78,7 +78,7 @@ Not rendered: `Templates/Files/Kubernetes/` and `Scripts/` (old PascalCase draft
 
 ## 6. Checking and CI
 
-[scripts/check.sh](../scripts/check.sh) builds, then compiles a system for `dev`, `test` and `prod` and runs `terraform init -backend=false` and `terraform validate` on each. [.github/workflows/check.yml](../.github/workflows/check.yml) runs it on every pull request and push to `main`. Deploying is described in [DEPLOY.md](DEPLOY.md).
+[scripts/check.sh](../scripts/check.sh) builds, then compiles a system for `dev`, `test` and `prod` and runs `terraform init -backend=false`, `terraform validate` and `terraform test` (plan and apply against a mocked azurerm, see [The mock test](DEPLOY.md#the-mock-test)) on each. [.github/workflows/check.yml](../.github/workflows/check.yml) runs it on every pull request and push to `main`. Deploying is described in [DEPLOY.md](DEPLOY.md).
 
 ## How to add a new kind
 
@@ -92,7 +92,8 @@ Example: `StorageAccount`.
 6. **Template:** write or fix `Modules/<area>/storage_accounts.tf.scriban`, with snake_case names only.
 7. **Render:** if the template's folder isn't rendered yet, add its prefix in `RenderSystemTemplateAsync`.
 8. **Providers:** if the template needs a new provider, add it to [versions.tf.scriban](../src/Huggly.Core/Templates/Files/Common/versions.tf.scriban).
-9. **Sample:** add a YAML to Conferenti so `scripts/check.sh` and CI cover it.
+9. **Mock:** if another resource uses this kind's `.id`, add a `mock_resource` block with a realistic Azure ID to [mock.tftest.hcl.scriban](../src/Huggly.Core/Templates/Files/Common/mock.tftest.hcl.scriban). Otherwise `terraform test` fails with `the number of segments didn't match`.
+10. **Sample:** add a YAML to Conferenti so `scripts/check.sh` and CI cover it.
 
 ## Folder map
 

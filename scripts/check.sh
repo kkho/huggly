@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds Huggly, compiles a sample system for every environment and validates the Terraform.
+# Builds Huggly, compiles a sample system for every environment and validates the Terraform and runs it against a mocked azurerm.
 # Usage (from anywhere in the repo): scripts/check.sh [system] default system: Conferenti
 set -uo pipefail
 
@@ -37,8 +37,9 @@ for env in "${ENVIRONMENTS[@]}"; do
   pushd "huggly-outputs/$env/$SYSTEM" > /dev/null
   terraform init -backend=false -input=false || fail "terraform init ($env)"
   terraform validate -no-color || fail "terraform validate ($env)"
+  terraform test -no-color || fail "terraform test ($env)"
   popd > /dev/null
 done
 
 echo
-echo "All environments compile and validate."
+echo "All environments compile, validate and pass the mock tests."

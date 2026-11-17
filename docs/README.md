@@ -67,9 +67,10 @@ The defaults for `--definitions` and `--output` don't match this repository's fo
 cd huggly-outputs/dev/Conferenti
 terraform init -backend=false
 terraform validate
+terraform test
 ```
 
-`-backend=false` skips the state backend, so you can validate without Azure or Terraform Cloud credentials.
+`-backend=false` skips the state backend, so you can validate without Azure or Terraform Cloud credentials. `terraform test` runs the generated `mock.tftest.hcl`: a `plan` and an `apply` against a fake azurerm, so it needs no Azure login either. See [The mock test](DEPLOY.md#the-mock-test).
 
 To check every environment at once, run `scripts/check.sh` in Git Bash. See [Validate, plan and apply](DEPLOY.md#1-run-the-check-no-azure-needed). The same script runs in GitHub Actions ([`.github/workflows/check.yml`](../.github/workflows/check.yml)) on every pull request and push to `main`, with Terraform pinned to the version in that file. When you upgrade Terraform locally, update the pin too.
 

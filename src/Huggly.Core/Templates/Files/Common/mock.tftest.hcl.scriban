@@ -1,0 +1,21 @@
+# Common/mock.tftest.hcl.scriban
+# Run with 'terraform test': plan and apply against a mocked azurerm. No Azure login needed.
+# Catches broken references and values the provider rejects; not name clashes, quota or policy.
+
+mock_provider "azurerm" {
+  # The mock invents random IDs, but azurerm checks that an ID used by
+  # another resource looks like an Azure ID. One block per referenced type.
+  mock_resource "azurerm_service_plan" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-mock/providers/Microsoft.Web/serverFarms/plan-mock"
+    }
+  }
+}
+
+run "plan" {
+  command = plan
+}
+
+run "apply" {
+  command = apply
+}

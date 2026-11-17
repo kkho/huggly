@@ -15,10 +15,11 @@ Each step catches a different kind of mistake, so the cheap ones run first:
 | `huggly compile`                | Bad YAML, unknown kinds, Scriban template errors                                                   | No           |
 | `terraform init -backend=false` | Broken `terraform {}` block, duplicate `required_providers`, providers that can't be found         | No           |
 | `terraform validate`            | Wrong attribute names, missing required fields, wrong types                                        | No           |
+| `terraform test` (mocked)       | Broken references between resources, values the provider rejects (e.g. ID formats)                 | No           |
 | `terraform plan`                | Wrong subscription, missing permissions, no access to the state (HCP Terraform login or workspace) | Yes          |
 | `terraform apply`               | Names already taken, quota limits, VM sizes not available in the region, Azure Policy denies       | Yes          |
 
-`validate` only checks that the Terraform is well formed for the azurerm provider, not that Azure will accept it. A storage account name someone else already owns passes `validate` and fails at `apply`.
+`validate` only checks that the Terraform is well formed for the azurerm provider, not that Azure will accept it. `terraform test` goes one step further and runs `plan` and `apply` against a fake azurerm, but it still never talks to Azure. A storage account name someone else already owns passes both and fails at the real `apply`.
 
 Commands are for **Git Bash** and run from the repository root (`D:\Hobby\huggly`). The `az` and `terraform` lines work unchanged in cmd and PowerShell if you run them one per line.
 
@@ -31,15 +32,41 @@ scripts/check.sh               # checks Conferenti
 scripts/check.sh <System>      # checks another system in src/huggly-templates/Systems/
 ```
 
-The script builds Huggly, then for `dev`, `test` and `prod` it compiles the system and runs `terraform init -backend=false` and `terraform validate` on the output. It stops at the first failure:
+The script builds Huggly, then for `dev`, `test` and `prod` it compiles the system and runs `terraform init -backend=false`, `terraform validate` and `terraform test` on the output. It stops at the first failure:
 
 ```
 CHECK FAILED - terraform validate (prod)
 ```
 
-The name in brackets tells you which step and environment failed, and the error above it says why. On success it ends with `All environments compile and validate.`
+The name in brackets tells you which step and environment failed, and the error above it says why. On success it ends with `All environments compile, validate and pass the mock tests.`
 
 Run it after every template or YAML change, before you commit.
+
+### The mock test
+
+Every compile also writes `mock.tftest.hcl` into the output folder, from [Common/mock.tftest.hcl.scriban](../src/Huggly.Core/Templates/Files/Common/mock.tftest.hcl.scriban). `terraform test` finds it there and runs two steps against `mock_provider "azurerm"`, a fake provider that returns invented values instead of calling Azure:
+
+```
+mock.tftest.hcl... in progress
+  run "plan"... pass
+  run "apply"... pass
+mock.tftest.hcl... tearing down
+mock.tftest.hcl... pass
+
+Success! 2 passed, 0 failed.
+```
+
+It needs no Azure login and no HCP Terraform, and works with both `local` and `remote` backends. `terraform plan` and `apply` ignore `*.tftest.hcl` files, so it doesn't affect a real deploy.
+
+To run it by hand for one environment:
+
+```bash
+cd huggly-outputs/dev/Conferenti
+terraform init -backend=false
+terraform test
+```
+
+**When a resource uses another resource's `.id`** (an App Service uses its plan's ID), the mock's random ID fails the provider's ID check with `the number of segments didn't match`. Add a `mock_resource` block with a realistic ID for that resource type to the template.
 
 It must run in Git Bash. From cmd or PowerShell, run `"C:\Program Files\Git\bin\bash.exe" scripts/check.sh`. Plain `bash` may start WSL instead, where `dotnet` isn't installed.
 
